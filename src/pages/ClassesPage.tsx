@@ -38,7 +38,7 @@ export default function ClassesPage() {
   if (loading) return <Spinner />
   if (error || !data) return <ErrorState message={error ?? 'Ma’lumot topilmadi'} onRetry={reload} />
 
-  const teacherName = (id: string) => data.teachers.find((t) => t.id === id)?.name
+  const teacherName = (id: string | null) => data.teachers.find((t) => t.id === id)?.name
   const studentCount = (id: string) => data.students.filter((s) => s.classId === id).length
 
   const submit = async (e: FormEvent) => {
@@ -115,7 +115,7 @@ export default function ClassesPage() {
                   <div className="flex gap-1">
                     <button
                       onClick={() => {
-                        setForm({ id: c.id, grade: c.grade, letter: c.letter, teacherId: c.teacherId })
+                        setForm({ id: c.id, grade: c.grade, letter: c.letter, teacherId: c.teacherId ?? '' })
                         setActionError(null)
                       }}
                       aria-label="Tahrirlash"

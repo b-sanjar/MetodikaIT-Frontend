@@ -28,12 +28,6 @@ export default function LoginPage() {
     }
   }
 
-  const fillDemo = (l: string, p: string) => {
-    setLoginName(l)
-    setPassword(p)
-    setError(null)
-  }
-
   return (
     <Card className="border-white/60 bg-white/80 p-6 shadow-2xl shadow-primary-500/10 backdrop-blur-xl dark:border-white/10 dark:bg-surface/80 dark:shadow-black/40">
       <form onSubmit={submit} className="flex flex-col gap-4">
@@ -41,7 +35,7 @@ export default function LoginPage() {
           <Input
             value={loginName}
             onChange={(e) => setLoginName(e.target.value)}
-            placeholder="admin"
+            placeholder="Login"
             autoFocus
             autoComplete="username"
             required
@@ -69,21 +63,6 @@ export default function LoginPage() {
           Kirish
         </Button>
       </form>
-
-      <div className="mt-5 border-t border-gray-100 pt-4 dark:border-edge">
-        <p className="mb-2 text-xs text-gray-400 dark:text-gray-500">Namunaviy hisoblar:</p>
-        <div className="grid grid-cols-3 gap-2">
-          <Button variant="outline" size="sm" onClick={() => fillDemo('admin', 'admin')}>
-            Admin
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => fillDemo('karimov', '1234')}>
-            O‘qituvchi
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => fillDemo('rahbar', 'rahbar')}>
-            Rahbariyat
-          </Button>
-        </div>
-      </div>
     </Card>
   )
 }

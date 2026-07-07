@@ -1,14 +1,5 @@
-import type { Attendance } from '../types'
-
-// Single source of truth for how students earn rating points.
-export const GRADE_POINTS: Record<number, number> = { 5: 15, 4: 10, 3: 5, 2: 0 }
-
-export const ATTENDANCE_POINTS: Record<Attendance, number> = { keldi: 2, kechikdi: 1, kelmadi: 0 }
-
-export function cellPoints(grade: number | null, attendance: Attendance): number {
-  return (grade ? (GRADE_POINTS[grade] ?? 0) : 0) + ATTENDANCE_POINTS[attendance]
-}
-
+// Display-only copy of the rating rules; the backend does the actual math
+// when a journal cell is saved (see API_ENDPOINTS.md, PUT /api/journal/cell).
 export const POINT_RULES = [
   { label: 'Darsda «5» baho', value: '+15 ball' },
   { label: 'Darsda «4» baho', value: '+10 ball' },

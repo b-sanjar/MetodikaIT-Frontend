@@ -46,11 +46,13 @@ export default function LeaderboardPage() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  const badgeDefs = api.getBadgeDefs()
-
   const { data, loading, error, reload, setData } = useFetch(async () => {
-    const [students, classes] = await Promise.all([api.getStudents(), api.getClasses()])
-    return { students, classes }
+    const [students, classes, badgeDefs] = await Promise.all([
+      api.getStudents(),
+      api.getClasses(),
+      api.getBadgeDefs(),
+    ])
+    return { students, classes, badgeDefs }
   })
 
   const ranked = useMemo(() => {
@@ -61,6 +63,8 @@ export default function LeaderboardPage() {
 
   if (loading) return <Spinner />
   if (error || !data) return <ErrorState message={error ?? 'Ma’lumot topilmadi'} onRetry={reload} />
+
+  const badgeDefs = data.badgeDefs
 
   const className = (id: string) => {
     const c = data.classes.find((k) => k.id === id)

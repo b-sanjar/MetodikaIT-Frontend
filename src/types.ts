@@ -1,15 +1,5 @@
 export type Role = 'admin' | 'teacher' | 'viewer'
 
-export interface User {
-  id: string
-  name: string
-  login: string
-  password: string
-  role: Role
-  title: string
-  photo: string
-}
-
 export interface Teacher {
   id: string
   name: string
@@ -17,7 +7,6 @@ export interface Teacher {
   email: string
   classIds: string[]
   login: string
-  password: string
   photo: string
 }
 
@@ -35,7 +24,8 @@ export interface ClassGroup {
   id: string
   grade: number
   letter: string
-  teacherId: string
+  /** null — rahbari o‘chirilgan/biriktirilmagan sinf */
+  teacherId: string | null
 }
 
 export interface Student {

@@ -16,15 +16,23 @@ import LeaderboardPage from './pages/LeaderboardPage'
 import StudentsPage from './pages/StudentsPage'
 import TeachersPage from './pages/TeachersPage'
 import NotFoundPage from './pages/NotFoundPage'
+import { Spinner } from './components/States'
 
 function RequireAuth() {
-  const { user } = useAuth()
+  const { user, ready } = useAuth()
+  if (!ready)
+    return (
+      <div className="grid min-h-screen place-items-center">
+        <Spinner />
+      </div>
+    )
   if (!user) return <Navigate to="/kirish" replace />
   return <Outlet />
 }
 
 function RedirectIfAuthed() {
-  const { user } = useAuth()
+  const { user, ready } = useAuth()
+  if (!ready) return null
   if (user) return <Navigate to="/" replace />
   return <Outlet />
 }
