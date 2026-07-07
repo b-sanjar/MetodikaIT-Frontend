@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Camera, CheckCircle2, KeyRound, UserRound } from 'lucide-react'
+import { Camera, CheckCircle2, KeyRound, Trash2, UserRound } from 'lucide-react'
 import * as api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import Avatar from '../components/Avatar'
@@ -7,7 +7,9 @@ import Button from '../components/Button'
 import Card from '../components/Card'
 import Chip from '../components/Chip'
 import PageHeader from '../components/PageHeader'
+import PhotoViewer from '../components/PhotoViewer'
 import { Field, Input } from '../components/Field'
+import { fileToAvatarDataURL } from '../utils/image'
 
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth()
@@ -22,6 +24,8 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [viewer, setViewer] = useState(false)
+  const [removing, setRemoving] = useState(false)
 
   const isTeacher = user?.role === 'teacher'
 
@@ -42,15 +46,33 @@ export default function ProfilePage() {
 
   if (!user) return null
 
-  const onPhotoPick = (file: File | undefined) => {
+  const onPhotoPick = async (file: File | undefined) => {
     if (!file) return
-    if (file.size > 2 * 1024 * 1024) {
-      setError('Rasm hajmi 2 MB dan oshmasin')
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Rasm hajmi 10 MB dan oshmasin')
       return
     }
-    const reader = new FileReader()
-    reader.onload = () => setPhoto(String(reader.result))
-    reader.readAsDataURL(file)
+    setError(null)
+    try {
+      setPhoto(await fileToAvatarDataURL(file))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Rasmni o‘qib bo‘lmadi — boshqa fayl tanlang')
+    }
+  }
+
+  /** Telegram-style: removing the photo saves immediately, not on form submit. */
+  const removePhoto = async () => {
+    setRemoving(true)
+    setError(null)
+    try {
+      await updateProfile({ photo: '' })
+      setPhoto('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'O‘chirishda xatolik')
+    } finally {
+      setRemoving(false)
+      setViewer(false)
+    }
   }
 
   const submit = async (e: FormEvent) => {
@@ -92,7 +114,14 @@ export default function ProfilePage() {
         <Card className="p-6">
           <div className="flex flex-col items-center gap-5 sm:flex-row">
             <div className="relative">
-              <Avatar name={name || user.name} photo={photo} size="xl" />
+              <button
+                type="button"
+                onClick={() => (photo ? setViewer(true) : fileRef.current?.click())}
+                aria-label={photo ? 'Rasmni kattaroq ko‘rish' : 'Rasm yuklash'}
+                className={photo ? 'block cursor-zoom-in rounded-full' : 'block cursor-pointer rounded-full'}
+              >
+                <Avatar name={name || user.name} photo={photo} size="xl" />
+              </button>
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
@@ -106,7 +135,10 @@ export default function ProfilePage() {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => onPhotoPick(e.target.files?.[0])}
+                onChange={(e) => {
+                  onPhotoPick(e.target.files?.[0])
+                  e.target.value = ''
+                }}
               />
             </div>
             <div className="text-center sm:text-left">
@@ -184,6 +216,29 @@ export default function ProfilePage() {
           </Button>
         </div>
       </form>
+
+      <PhotoViewer
+        open={viewer && !!photo}
+        src={photo}
+        alt={name || user.name}
+        onClose={() => setViewer(false)}
+        actions={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setViewer(false)
+                fileRef.current?.click()
+              }}
+            >
+              <Camera size={15} /> Almashtirish
+            </Button>
+            <Button variant="danger" onClick={removePhoto} disabled={removing}>
+              <Trash2 size={15} /> {removing ? 'O‘chirilmoqda...' : 'O‘chirish'}
+            </Button>
+          </>
+        }
+      />
     </div>
   )
 }

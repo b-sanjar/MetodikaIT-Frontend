@@ -52,18 +52,26 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 // ---------- Auth & profile ----------
 
+// PATCH /api/profile ignores empty strings, so a removed photo is stored as
+// this sentinel on the backend and mapped back to '' whenever we read it.
+const CLEARED_PHOTO = 'none'
+
+function withPhoto<T extends { photo: string }>(obj: T): T {
+  return obj.photo && !obj.photo.startsWith('data:') ? { ...obj, photo: '' } : obj
+}
+
 export async function login(loginName: string, password: string): Promise<SessionUser> {
   const { token, user } = await request<{ token: string; user: SessionUser }>('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify({ login: loginName.trim(), password }),
   })
   localStorage.setItem(TOKEN_KEY, token)
-  return user
+  return withPhoto(user)
 }
 
 /** Restores the session from the stored token (page refresh). */
 export function getMe(): Promise<SessionUser> {
-  return request<SessionUser>('/api/auth/me')
+  return request<SessionUser>('/api/auth/me').then(withPhoto)
 }
 
 export function logout() {
@@ -81,12 +89,13 @@ export interface ProfilePatch {
 }
 
 export function updateProfile(patch: ProfilePatch): Promise<SessionUser> {
-  return request<SessionUser>('/api/profile', { method: 'PATCH', body: JSON.stringify(patch) })
+  const body = { ...patch, ...(patch.photo === '' ? { photo: CLEARED_PHOTO } : {}) }
+  return request<SessionUser>('/api/profile', { method: 'PATCH', body: JSON.stringify(body) }).then(withPhoto)
 }
 
 /** Extra profile fields only teachers have (phone/email). */
 export function getTeacherProfile(id: string): Promise<Teacher | null> {
-  return request<Teacher | null>(`/api/teachers/${id}/profile`)
+  return request<Teacher | null>(`/api/teachers/${id}/profile`).then((t) => (t ? withPhoto(t) : null))
 }
 
 // ---------- Lessons ----------
@@ -145,7 +154,7 @@ export function deleteClass(id: string): Promise<void> {
 }
 
 export function getTeachers(): Promise<Teacher[]> {
-  return request<Teacher[]>('/api/teachers')
+  return request<Teacher[]>('/api/teachers').then((list) => list.map(withPhoto))
 }
 
 export interface TeacherInput {
