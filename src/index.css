@@ -199,6 +199,17 @@ body {
   }
 }
 
+/* Light streak sweeping across rank hero cards */
+@keyframes shine {
+  0% {
+    transform: translateX(0) skewX(-12deg);
+  }
+  60%,
+  100% {
+    transform: translateX(400%) skewX(-12deg);
+  }
+}
+
 .animate-rise {
   animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -229,6 +240,10 @@ body {
 
 .animate-sparkle {
   animation: sparkle 2.6s ease-in-out infinite;
+}
+
+.animate-shine {
+  animation: shine 3.2s ease-in-out infinite;
 }
 
 .animate-grow-line {
