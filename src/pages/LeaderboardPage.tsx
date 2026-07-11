@@ -197,7 +197,7 @@ export default function LeaderboardPage() {
                     <tr
                       key={s.id}
                       onClick={() => setViewingId(s.id)}
-                      className="cursor-pointer border-b border-gray-50 transition-colors last:border-0 hover:bg-primary-500/5 dark:border-edge/50 dark:hover:bg-white/[0.03]"
+                      className="cursor-pointer border-b border-gray-50 transition-colors last:border-0 hover:bg-primary-500/5 dark:border-edge/50 dark:hover:bg-white/3"
                     >
                       <td className="px-4 py-3 font-semibold text-gray-400 tabular-nums">{i + 4}</td>
                       <td className="px-4 py-3">
