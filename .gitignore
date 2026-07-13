@@ -12,8 +12,9 @@ dist
 dist-ssr
 *.local
 
-BACKEND_SPEC.md
-CLAUDE.md
+# Faqat README.md gitga yuklanadi, qolgan .md fayllar lokal qoladi
+*.md
+!README.md
 
 # Editor directories and files
 .vscode/*
