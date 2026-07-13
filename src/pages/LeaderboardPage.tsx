@@ -15,7 +15,24 @@ import { EmptyState, ErrorState, Spinner } from '../components/States'
 import { POINT_RULES } from '../utils/points'
 import { RANKS, rankFor, starsFor } from '../utils/gamification'
 import { cn } from '../utils/cn'
-import type { Student } from '../types'
+import type { LeaderboardPeriod, Student } from '../types'
+
+const PERIODS: { id: LeaderboardPeriod; label: string }[] = [
+  { id: 'week', label: 'Hafta' },
+  { id: 'month', label: 'Oy' },
+  { id: 'quarter', label: 'Chorak' },
+  { id: 'all', label: 'Umumiy' },
+]
+
+const REWARD_OPTIONS = [
+  { points: '5', label: '+5 — faollik uchun', reason: 'Faollik uchun' },
+  { points: '10', label: '+10 — yaxshi javob uchun', reason: 'Yaxshi javob uchun' },
+  { points: '20', label: '+20 — a’lo amaliy ish uchun', reason: 'A’lo amaliy ish uchun' },
+  { points: '50', label: '+50 — loyiha g‘olibi', reason: 'Loyiha g‘olibi' },
+]
+
+/** Student joined with their points sum for the selected period. */
+type RankedStudent = Student & { periodPoints: number }
 
 const PODIUM = [
   {
@@ -38,6 +55,7 @@ const PODIUM = [
 export default function LeaderboardPage() {
   const { canTeach } = useAuth()
   const [classFilter, setClassFilter] = useState('all')
+  const [period, setPeriod] = useState<LeaderboardPeriod>('all')
   const [viewingId, setViewingId] = useState<string | null>(null)
   const [rewarding, setRewarding] = useState<Student | null>(null)
   const [rewardPoints, setRewardPoints] = useState('10')
@@ -54,14 +72,29 @@ export default function LeaderboardPage() {
     return { students, classes, badgeDefs }
   })
 
-  const ranked = useMemo(() => {
-    if (!data) return []
-    const list = classFilter === 'all' ? data.students : data.students.filter((s) => s.classId === classFilter)
-    return [...list].sort((a, b) => b.points - a.points)
-  }, [data, classFilter])
+  const {
+    data: board,
+    loading: boardLoading,
+    error: boardError,
+    reload: reloadBoard,
+  } = useFetch(
+    () => api.getLeaderboard(period, classFilter === 'all' ? undefined : classFilter),
+    [period, classFilter],
+  )
 
-  if (loading) return <Spinner />
+  const ranked = useMemo<RankedStudent[]>(() => {
+    if (!data || !board) return []
+    return board
+      .map((e) => {
+        const s = data.students.find((st) => st.id === e.studentId)
+        return s ? { ...s, periodPoints: e.points } : null
+      })
+      .filter((s): s is RankedStudent => s !== null)
+  }, [data, board])
+
+  if (loading || boardLoading) return <Spinner />
   if (error || !data) return <ErrorState message={error ?? 'Ma’lumot topilmadi'} onRetry={reload} />
+  if (boardError || !board) return <ErrorState message={boardError ?? 'Ma’lumot topilmadi'} onRetry={reloadBoard} />
 
   const badgeDefs = data.badgeDefs
 
@@ -75,11 +108,13 @@ export default function LeaderboardPage() {
     setSaving(true)
     setSaveError(null)
     try {
-      const updated = await api.addPoints(rewarding.id, Number(rewardPoints), rewardBadge || undefined)
+      const reason = REWARD_OPTIONS.find((o) => o.points === rewardPoints)?.reason
+      const updated = await api.addPoints(rewarding.id, Number(rewardPoints), rewardBadge || undefined, reason)
       setData((prev) => ({
         ...prev,
         students: prev.students.map((s) => (s.id === updated.id ? updated : s)),
       }))
+      reloadBoard()
       setRewarding(null)
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Saqlashda xatolik')
@@ -111,8 +146,27 @@ export default function LeaderboardPage() {
         }
       />
 
+      {/* Period tabs */}
+      <div className="mb-5 flex w-fit gap-1 rounded-lg border border-gray-100 bg-gray-50/60 p-1 dark:border-edge dark:bg-surface-2">
+        {PERIODS.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => setPeriod(p.id)}
+            className={cn(
+              'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+              period === p.id
+                ? 'bg-white text-gray-900 shadow-sm dark:bg-white/10 dark:text-white'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200',
+            )}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
       {!ranked.length ? (
-        <EmptyState title="Bu sinfda o‘quvchilar yo‘q" />
+        <EmptyState title="Bu davrda ball to‘plagan o‘quvchilar yo‘q" />
       ) : (
         <>
           {/* Podium */}
@@ -168,8 +222,8 @@ export default function LeaderboardPage() {
                       <Star key={k} size={14} className="fill-amber-400 text-amber-400" />
                     ))}
                   </div>
-                  <p className="font-display mt-2 text-3xl font-semibold text-gray-900 tabular-nums dark:text-white">{s.points}</p>
-                  <p className="text-[11px] text-gray-400">ball</p>
+                  <p className="font-display mt-2 text-3xl font-semibold text-gray-900 tabular-nums dark:text-white">{s.periodPoints}</p>
+                  <p className="text-[11px] text-gray-400">{period === 'all' ? 'ball' : 'davr bali'}</p>
                 </Card>
               )
             })}
@@ -234,7 +288,7 @@ export default function LeaderboardPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-right font-semibold text-gray-900 tabular-nums dark:text-white">
-                        {s.points}
+                        {s.periodPoints}
                       </td>
                       {canTeach && (
                         <td className="px-4 py-3 text-right">
@@ -324,10 +378,11 @@ export default function LeaderboardPage() {
         <div className="flex flex-col gap-4">
           <Field label="Ball qo‘shish">
             <Select value={rewardPoints} onChange={(e) => setRewardPoints(e.target.value)}>
-              <option value="5">+5 — faollik uchun</option>
-              <option value="10">+10 — yaxshi javob uchun</option>
-              <option value="20">+20 — a’lo amaliy ish uchun</option>
-              <option value="50">+50 — loyiha g‘olibi</option>
+              {REWARD_OPTIONS.map((o) => (
+                <option key={o.points} value={o.points}>
+                  {o.label}
+                </option>
+              ))}
             </Select>
           </Field>
           <Field label="Nishon (ixtiyoriy)">

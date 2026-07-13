@@ -9,7 +9,10 @@ import type {
   GradeSummary,
   JournalColumn,
   JournalEntry,
+  LeaderboardEntry,
+  LeaderboardPeriod,
   Lesson,
+  PointsEvent,
   QuarterInfo,
   SessionUser,
   Student,
@@ -195,11 +198,25 @@ export function deleteStudent(id: string): Promise<void> {
   return request<void>(`/api/students/${id}`, { method: 'DELETE' })
 }
 
-export function addPoints(studentId: string, points: number, badgeId?: string): Promise<Student> {
+export function addPoints(studentId: string, points: number, badgeId?: string, reason?: string): Promise<Student> {
   return request<Student>(`/api/students/${studentId}/points`, {
     method: 'POST',
-    body: JSON.stringify({ points, badgeId }),
+    body: JSON.stringify({ points, badgeId, reason }),
   })
+}
+
+/** Recent point changes, newest first. */
+export function getPointsHistory(studentId: string, limit = 20): Promise<PointsEvent[]> {
+  return request<PointsEvent[]>(`/api/students/${studentId}/points-history?limit=${limit}`)
+}
+
+/** All journal entries of one student across every class, ordered by date. */
+export function getStudentJournal(studentId: string): Promise<JournalEntry[]> {
+  return request<JournalEntry[]>(`/api/students/${studentId}/journal`)
+}
+
+export function getLeaderboard(period: LeaderboardPeriod, classId?: string): Promise<LeaderboardEntry[]> {
+  return request<LeaderboardEntry[]>(`/api/leaderboard?period=${period}${classId ? `&classId=${classId}` : ''}`)
 }
 
 export function getBadgeDefs(): Promise<BadgeDef[]> {

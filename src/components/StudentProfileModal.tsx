@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Award, BookOpen, CalendarCheck, Flame, Lock, Sparkles, Star } from 'lucide-react'
+import { Award, BookOpen, CalendarCheck, Flame, History, Lock, Sparkles, Star } from 'lucide-react'
 import * as api from '../services/api'
 import { useFetch } from '../hooks/useFetch'
 import { useCountUp } from '../hooks/useCountUp'
@@ -13,6 +13,7 @@ import {
   starsFor,
 } from '../utils/gamification'
 import { cn } from '../utils/cn'
+import { formatDateShort } from '../utils/format'
 import type { BadgeDef, Student } from '../types'
 
 interface Props {
@@ -26,21 +27,22 @@ interface Props {
 
 /**
  * Game-style student profile: rank hero, animated points counter, progress
- * to the next rank, journal stats and an achievements board. Journal history
- * is fetched per class and filtered to this student (see BACKEND_GAMIFICATION.md).
+ * to the next rank, points timeline, journal stats and an achievements board.
+ * Journal and points history come from the per-student endpoints.
  */
 export default function StudentProfileModal({ student, position, classLabel, badgeDefs, onClose }: Props) {
-  const { data: entries, loading, error, reload } = useFetch(
-    () => (student ? api.getJournal(student.classId) : Promise.resolve([])),
+  const { data, loading, error, reload } = useFetch(
+    () =>
+      student
+        ? Promise.all([api.getStudentJournal(student.id), api.getPointsHistory(student.id)])
+        : Promise.resolve(null),
     [student?.id],
   )
 
   const points = useCountUp(student?.points ?? 0)
 
-  const stats = useMemo(
-    () => computeStats((entries ?? []).filter((e) => e.studentId === student?.id)),
-    [entries, student?.id],
-  )
+  const stats = useMemo(() => computeStats(data?.[0] ?? []), [data])
+  const history = data?.[1] ?? []
 
   if (!student) return null
 
@@ -159,6 +161,48 @@ export default function StudentProfileModal({ student, position, classLabel, bad
                   <p className="text-[11px] text-gray-400">{s.label}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Points timeline */}
+            <div>
+              <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-900 dark:text-white">
+                <History size={15} className="text-primary-500" /> Ballar tarixi
+              </h3>
+              {history.length ? (
+                <div className="stagger flex flex-col gap-1.5">
+                  {history.map((e) => {
+                    const badge = e.badgeId ? badgeDefs.find((d) => d.id === e.badgeId) : null
+                    return (
+                      <div
+                        key={e.id}
+                        className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50/60 px-3.5 py-2 dark:border-edge dark:bg-surface-2"
+                      >
+                        <span className="w-16 shrink-0 text-[11px] text-gray-400 tabular-nums">{formatDateShort(e.date)}</span>
+                        <span className="min-w-0 flex-1 truncate text-sm text-gray-600 dark:text-gray-300">{e.reason}</span>
+                        {badge && (
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600 ring-1 ring-amber-500/30 ring-inset dark:text-amber-300">
+                            <Award size={10} /> {badge.name}
+                          </span>
+                        )}
+                        <span
+                          className={cn(
+                            'shrink-0 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums',
+                            e.delta >= 0
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300'
+                              : 'bg-red-500/10 text-red-500 dark:text-red-300',
+                          )}
+                        >
+                          {e.delta >= 0 ? `+${e.delta}` : e.delta}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="rounded-xl border border-dashed border-gray-200 px-4 py-3 text-center text-xs text-gray-400 dark:border-edge">
+                  Hozircha ball tarixi yo‘q
+                </p>
+              )}
             </div>
 
             {/* Earned badges */}

@@ -89,6 +89,26 @@ export interface BadgeDef {
   description: string
 }
 
+/** One logged points change from /students/{id}/points-history. */
+export interface PointsEvent {
+  id: string
+  date: string
+  delta: number
+  source: 'journal' | 'reward'
+  reason: string
+  /** Badge granted together with this event, if any. */
+  badgeId: string | null
+}
+
+export type LeaderboardPeriod = 'week' | 'month' | 'quarter' | 'all'
+
+export interface LeaderboardEntry {
+  studentId: string
+  /** Sum of point deltas within the selected period. */
+  points: number
+  position: number
+}
+
 export interface GradeSummary {
   grade: number
   lessonCount: number
