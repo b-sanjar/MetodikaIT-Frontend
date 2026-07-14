@@ -22,10 +22,6 @@ import type {
 const BASE_URL: string = import.meta.env.VITE_API_URL ?? 'https://api.ilmkon-metodika.uz'
 const TOKEN_KEY = 'mit:token'
 
-// Drop the pre-backend localStorage database left by earlier builds
-localStorage.removeItem('mit:db:v2')
-localStorage.removeItem('mit:session:v2')
-
 export function hasToken(): boolean {
   return Boolean(localStorage.getItem(TOKEN_KEY))
 }

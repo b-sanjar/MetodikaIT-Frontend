@@ -24,7 +24,7 @@ export default function AuthLayout() {
         style={{ animationDelay: '2s' }}
       />
 
-      <div className="animate-rise relative w-full max-w-sm">
+      <div className="animate-rise relative w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-4 text-center">
           <span className="animate-float relative flex h-14 w-14 items-center justify-center">
             <span

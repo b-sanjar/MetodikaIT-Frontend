@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CircleAlert, LoaderCircle, LogIn } from 'lucide-react'
+import { CircleAlert, Eye, EyeOff, LoaderCircle, LogIn } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Button from '../components/Button'
 import Card from '../components/Card'
@@ -11,6 +11,7 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const [loginName, setLoginName] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -29,27 +30,40 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="border-white/60 bg-white/80 p-6 shadow-2xl shadow-primary-500/10 backdrop-blur-xl dark:border-white/10 dark:bg-surface/80 dark:shadow-black/40">
-      <form onSubmit={submit} className="flex flex-col gap-4">
+    <Card className="border-white/60 bg-white/80 p-8 shadow-2xl shadow-primary-500/10 backdrop-blur-xl sm:p-10 dark:border-white/10 dark:bg-surface/80 dark:shadow-black/40">
+      <form onSubmit={submit} className="flex flex-col gap-5">
         <Field label="Login">
           <Input
             value={loginName}
             onChange={(e) => setLoginName(e.target.value)}
             placeholder="Login"
+            className="h-12 text-base"
             autoFocus
             autoComplete="username"
             required
           />
         </Field>
         <Field label="Parol">
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••"
-            autoComplete="current-password"
-            required
-          />
+          <div className="relative">
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••"
+              className="h-12 pr-11 text-base"
+              autoComplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Parolni yashirish' : 'Parolni ko‘rsatish'}
+              title={showPassword ? 'Parolni yashirish' : 'Parolni ko‘rsatish'}
+              className="absolute top-1/2 right-2 -translate-y-1/2 rounded-lg p-2 text-gray-400 transition-colors hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </Field>
 
         {error && (
