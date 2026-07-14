@@ -33,12 +33,17 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!isTeacher || !user) return
     let alive = true
-    api.getTeacherProfile(user.id).then((t) => {
-      if (alive && t) {
-        setPhone(t.phone)
-        setEmail(t.email)
-      }
-    })
+    api
+      .getTeacherProfile(user.id)
+      .then((t) => {
+        if (alive && t) {
+          setPhone(t.phone)
+          setEmail(t.email)
+        }
+      })
+      .catch((err: unknown) => {
+        if (alive) setError(err instanceof Error ? err.message : 'Kontakt ma’lumotlarini yuklab bo‘lmadi')
+      })
     return () => {
       alive = false
     }

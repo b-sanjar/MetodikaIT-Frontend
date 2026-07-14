@@ -224,6 +224,22 @@ export default function LeaderboardPage() {
                   </div>
                   <p className="font-display mt-2 text-3xl font-semibold text-gray-900 tabular-nums dark:text-white">{s.periodPoints}</p>
                   <p className="text-[11px] text-gray-400">{period === 'all' ? 'ball' : 'davr bali'}</p>
+                  {canTeach && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="relative mt-3"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setRewarding(s)
+                        setRewardPoints('10')
+                        setRewardBadge('')
+                        setSaveError(null)
+                      }}
+                    >
+                      <Plus size={13} /> Ball
+                    </Button>
+                  )}
                 </Card>
               )
             })}

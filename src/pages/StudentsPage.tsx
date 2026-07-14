@@ -9,6 +9,7 @@ import Card from '../components/Card'
 import Chip from '../components/Chip'
 import Modal from '../components/Modal'
 import PageHeader from '../components/PageHeader'
+import StudentProfileModal from '../components/StudentProfileModal'
 import { Field, Input, Select } from '../components/Field'
 import { EmptyState, ErrorState, Spinner } from '../components/States'
 import type { Student } from '../types'
@@ -25,12 +26,17 @@ export default function StudentsPage() {
   const [classFilter, setClassFilter] = useState('all')
   const [form, setForm] = useState<FormState | null>(null)
   const [removing, setRemoving] = useState<Student | null>(null)
+  const [viewingId, setViewingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
   const { data, loading, error, reload, setData } = useFetch(async () => {
-    const [students, classes] = await Promise.all([api.getStudents(), api.getClasses()])
-    return { students, classes }
+    const [students, classes, badgeDefs] = await Promise.all([
+      api.getStudents(),
+      api.getClasses(),
+      api.getBadgeDefs(),
+    ])
+    return { students, classes, badgeDefs }
   })
 
   const filtered = useMemo(() => {
@@ -48,6 +54,11 @@ export default function StudentsPage() {
     const c = data.classes.find((k) => k.id === id)
     return c ? `${c.grade}-«${c.letter}»` : '—'
   }
+
+  // Overall position by total points — the same ordering the leaderboard uses
+  const byPoints = [...data.students].sort((a, b) => b.points - a.points)
+  const viewingIndex = byPoints.findIndex((s) => s.id === viewingId)
+  const viewing = viewingIndex >= 0 ? byPoints[viewingIndex] : null
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -141,7 +152,11 @@ export default function StudentsPage() {
             </thead>
             <tbody>
               {filtered.map((s) => (
-                <tr key={s.id} className="border-b border-gray-50 last:border-0 dark:border-edge/50">
+                <tr
+                  key={s.id}
+                  onClick={() => setViewingId(s.id)}
+                  className="cursor-pointer border-b border-gray-50 transition-colors last:border-0 hover:bg-primary-500/5 dark:border-edge/50 dark:hover:bg-white/3"
+                >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       <Avatar name={s.name} size="sm" />
@@ -158,14 +173,14 @@ export default function StudentsPage() {
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
                         <button
-                          onClick={() => { setForm({ id: s.id, name: s.name, classId: s.classId }); setActionError(null) }}
+                          onClick={(e) => { e.stopPropagation(); setForm({ id: s.id, name: s.name, classId: s.classId }); setActionError(null) }}
                           aria-label="Tahrirlash"
                           className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-primary-500/10 hover:text-primary-500 cursor-pointer"
                         >
                           <Pencil size={15} />
                         </button>
                         <button
-                          onClick={() => { setRemoving(s); setActionError(null) }}
+                          onClick={(e) => { e.stopPropagation(); setRemoving(s); setActionError(null) }}
                           aria-label="O‘chirish"
                           className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-500/10 hover:text-red-500 cursor-pointer"
                         >
@@ -180,6 +195,14 @@ export default function StudentsPage() {
           </table>
         </Card>
       )}
+
+      <StudentProfileModal
+        student={viewing}
+        position={viewingIndex + 1}
+        classLabel={viewing ? className(viewing.classId) : ''}
+        badgeDefs={data.badgeDefs}
+        onClose={() => setViewingId(null)}
+      />
 
       {/* Add / edit */}
       <Modal open={form !== null} title={form?.id ? 'O‘quvchini tahrirlash' : 'Yangi o‘quvchi'} onClose={() => setForm(null)}>

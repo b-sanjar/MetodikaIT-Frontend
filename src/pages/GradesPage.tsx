@@ -21,7 +21,7 @@ export default function GradesPage() {
       />
       <div className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {grades.map((g) => {
-          const percent = Math.round((g.readyCount / g.lessonCount) * 100)
+          const percent = g.lessonCount ? Math.round((g.readyCount / g.lessonCount) * 100) : 0
           return (
             <Link key={g.grade} to={`/darslar/${g.grade}`}>
               <Card hover className="group relative h-full overflow-hidden p-5">
