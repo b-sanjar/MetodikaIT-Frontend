@@ -169,6 +169,7 @@ export interface TeacherInput {
   login: string
   password?: string
   subjectId?: string | null
+  subjectIds?: string[]
 }
 
 export function saveTeacher(data: TeacherInput): Promise<Teacher> {

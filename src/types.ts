@@ -21,7 +21,9 @@ export interface Teacher {
   login: string
   photo: string
   subjectId?: string | null
+  subjectIds?: string[]
   subjectName?: string
+  subjectNames?: string[]
 }
 
 /** Logged-in identity: an admin/viewer user or a teacher. */
@@ -33,7 +35,9 @@ export interface SessionUser {
   title: string
   photo: string
   subjectId?: string | null
+  subjectIds?: string[]
   subjectName?: string
+  subjectNames?: string[]
 }
 
 export interface ClassGroup {

@@ -9,7 +9,7 @@ import Avatar from '../components/Avatar'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Chip from '../components/Chip'
-import { Field, Input, Select } from '../components/Field'
+import { Field, Input } from '../components/Field'
 import Modal from '../components/Modal'
 import PageHeader from '../components/PageHeader'
 import { EmptyState, ErrorState, Spinner } from '../components/States'
@@ -22,7 +22,7 @@ interface FormState {
   classIds: string[]
   login: string
   password: string
-  subjectId: string
+  subjectIds: string[]
 }
 
 export default function TeachersPage() {
@@ -67,12 +67,22 @@ export default function TeachersPage() {
     })
   }
 
+  const toggleSubject = (id: string) => {
+    if (!form) return
+    setForm({
+      ...form,
+      subjectIds: form.subjectIds.includes(id)
+        ? form.subjectIds.filter((s) => s !== id)
+        : [...form.subjectIds, id],
+    })
+  }
+
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!form) return
 
-    if (!form.subjectId) {
-      setActionError('Iltimos, o‘qitadigan fanni tanlang')
+    if (!form.subjectIds.length) {
+      setActionError('Iltimos, kamida bitta o‘qitadigan fanni tanlang')
       return
     }
 
@@ -87,7 +97,8 @@ export default function TeachersPage() {
         classIds: form.classIds,
         login: form.login.trim(),
         password: form.password || undefined,
-        subjectId: form.subjectId,
+        subjectIds: form.subjectIds,
+        subjectId: form.subjectIds[0] || null,
       })
       await reload()
       setForm(null)
@@ -115,7 +126,12 @@ export default function TeachersPage() {
 
   const filteredTeachers = data.teachers.filter((t) => {
     if (selectedSubject === 'all') return true
-    return t.subjectId === selectedSubject
+    const teacherSids = Array.isArray(t.subjectIds) && t.subjectIds.length
+      ? t.subjectIds
+      : t.subjectId
+        ? [t.subjectId]
+        : []
+    return teacherSids.includes(selectedSubject)
   })
 
   return (
@@ -134,7 +150,7 @@ export default function TeachersPage() {
                   classIds: [],
                   login: '',
                   password: '',
-                  subjectId: data.subjects[0]?.id || '',
+                  subjectIds: data.subjects[0] ? [data.subjects[0].id] : [],
                 })
                 setActionError(null)
               }}
@@ -161,7 +177,15 @@ export default function TeachersPage() {
             Barcha fanlar ({data.teachers.length})
           </button>
           {data.subjects.map((sub) => {
-            const count = data.teachers.filter((t) => t.subjectId === sub.id).length
+            const count = data.teachers.filter((t) => {
+              const teacherSids = Array.isArray(t.subjectIds) && t.subjectIds.length
+                ? t.subjectIds
+                : t.subjectId
+                  ? [t.subjectId]
+                  : []
+              return teacherSids.includes(sub.id)
+            }).length
+
             return (
               <button
                 key={sub.id}
@@ -189,7 +213,11 @@ export default function TeachersPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredTeachers.map((t) => {
-            const subjectName = getSubjectName(t)
+            const subjectNamesList = (Array.isArray(t.subjectNames) && t.subjectNames.length > 0)
+              ? t.subjectNames
+              : (Array.isArray(t.subjectIds) && t.subjectIds.length > 0)
+                ? t.subjectIds.map((sid) => data.subjects.find((s) => s.id === sid)?.name).filter(Boolean) as string[]
+                : [getSubjectName(t)]
 
             return (
               <Card key={t.id} className="flex flex-col p-5">
@@ -199,7 +227,12 @@ export default function TeachersPage() {
                     <div className="flex gap-1">
                       <button
                         onClick={() => {
-                          setForm({ ...t, password: '', subjectId: t.subjectId || '' })
+                          const currentSubjectIds = Array.isArray(t.subjectIds) && t.subjectIds.length
+                            ? t.subjectIds
+                            : t.subjectId
+                              ? [t.subjectId]
+                              : []
+                          setForm({ ...t, password: '', subjectIds: currentSubjectIds })
                           setActionError(null)
                         }}
                         aria-label="Tahrirlash"
@@ -218,11 +251,16 @@ export default function TeachersPage() {
                   )}
                 </div>
                 <h2 className="mt-3 font-semibold text-gray-900 dark:text-white">{t.name}</h2>
-                <div className="mt-1 flex items-center gap-2">
-                  <Chip tone={t.subjectId ? 'primary' : 'gray'} className="text-[11px] font-medium">
-                    {subjectName}
-                  </Chip>
+
+                {/* Subject chips */}
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  {subjectNamesList.map((sName) => (
+                    <Chip key={sName} tone="primary" className="text-[11px] font-medium">
+                      {sName}
+                    </Chip>
+                  ))}
                 </div>
+
                 {isAdmin && (
                   <Chip tone="gray" className="mt-2 self-start font-mono text-[10px]">
                     @{t.login}
@@ -280,20 +318,31 @@ export default function TeachersPage() {
               />
             </Field>
 
-            <Field label="O‘qitadigan fani *">
-              <Select
-                value={form.subjectId}
-                onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
-                required
-              >
-                <option value="">Fan tanlang...</option>
-                {data.subjects.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} ({s.code || 'Fan'})
-                  </option>
-                ))}
-              </Select>
-            </Field>
+            {/* Multi-subject selection */}
+            <div>
+              <span className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                O‘qitadigan fani (bir yoki bir nechtasini tanlang) *
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {data.subjects.map((sub) => {
+                  const active = form.subjectIds.includes(sub.id)
+                  return (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => toggleSubject(sub.id)}
+                      className={
+                        active
+                          ? 'rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-medium text-white cursor-pointer shadow-xs transition-all'
+                          : 'rounded-lg border border-gray-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-gray-600 hover:border-primary-400 dark:border-edge dark:bg-surface-2 dark:text-gray-300 cursor-pointer transition-all'
+                      }
+                    >
+                      {sub.name} {sub.code ? `(${sub.code})` : ''}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Telefon">
