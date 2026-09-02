@@ -16,10 +16,11 @@ import type {
   QuarterInfo,
   SessionUser,
   Student,
+  Subject,
   Teacher,
 } from '../types'
 
-const BASE_URL: string = import.meta.env.VITE_API_URL ?? 'https://api.ilmkon-metodika.uz'
+const BASE_URL: string = import.meta.env.VITE_API_URL ?? 'https://metodikait-backend.onrender.com'
 const TOKEN_KEY = 'mit:token'
 
 export function hasToken(): boolean {
@@ -99,12 +100,14 @@ export function getTeacherProfile(id: string): Promise<Teacher | null> {
 
 // ---------- Lessons ----------
 
-export function getGradeSummaries(): Promise<GradeSummary[]> {
-  return request<GradeSummary[]>('/api/lessons/summary')
+export function getGradeSummaries(subjectId?: string): Promise<GradeSummary[]> {
+  const query = subjectId ? `?subjectId=${encodeURIComponent(subjectId)}` : ''
+  return request<GradeSummary[]>(`/api/lessons/summary${query}`)
 }
 
-export function getLessonsByGrade(grade: number): Promise<Lesson[]> {
-  return request<Lesson[]>(`/api/lessons?grade=${grade}`)
+export function getLessonsByGrade(grade: number, subjectId?: string): Promise<Lesson[]> {
+  const query = subjectId ? `&subjectId=${encodeURIComponent(subjectId)}` : ''
+  return request<Lesson[]>(`/api/lessons?grade=${grade}${query}`)
 }
 
 export function getLesson(id: string): Promise<Lesson> {
@@ -116,6 +119,7 @@ export interface NewLessonInput {
   quarter: number
   title: string
   durationMin?: number
+  subjectId?: string | null
 }
 
 /** The backend fills the lesson body from a template and sets the author from the token. */
@@ -164,6 +168,7 @@ export interface TeacherInput {
   classIds: string[]
   login: string
   password?: string
+  subjectId?: string | null
 }
 
 export function saveTeacher(data: TeacherInput): Promise<Teacher> {
@@ -176,6 +181,24 @@ export function saveTeacher(data: TeacherInput): Promise<Teacher> {
 
 export function deleteTeacher(id: string): Promise<void> {
   return request<void>(`/api/teachers/${id}`, { method: 'DELETE' })
+}
+
+// ---------- Subjects ----------
+
+export function getSubjects(): Promise<Subject[]> {
+  return request<Subject[]>('/api/subjects')
+}
+
+export function saveSubject(data: Partial<Subject> & { id?: string }): Promise<Subject> {
+  const { id, ...fields } = data
+  const body = JSON.stringify(fields)
+  return id
+    ? request<Subject>(`/api/subjects/${id}`, { method: 'PATCH', body })
+    : request<Subject>('/api/subjects', { method: 'POST', body })
+}
+
+export function deleteSubject(id: string): Promise<void> {
+  return request<void>(`/api/subjects/${id}`, { method: 'DELETE' })
 }
 
 export function getStudents(classId?: string): Promise<Student[]> {

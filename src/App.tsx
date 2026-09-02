@@ -15,6 +15,7 @@ import ProfilePage from './pages/ProfilePage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import StudentsPage from './pages/StudentsPage'
 import TeachersPage from './pages/TeachersPage'
+import SubjectsPage from './pages/SubjectsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import { Spinner } from './components/States'
 
@@ -62,6 +63,7 @@ export default function App() {
 
               <Route element={<MainLayout />}>
                 <Route path="/" element={<DashboardPage />} />
+                <Route path="/fanlar" element={<SubjectsPage />} />
                 <Route path="/darslar" element={<GradesPage />} />
                 <Route path="/darslar/:grade" element={<GradeDetailPage />} />
                 <Route path="/dars/:id" element={<LessonPage />} />

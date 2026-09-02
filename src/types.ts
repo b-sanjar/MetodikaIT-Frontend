@@ -1,5 +1,17 @@
 export type Role = 'admin' | 'teacher' | 'viewer'
 
+export interface Subject {
+  id: string
+  name: string
+  code: string
+  description: string
+  color: string
+  icon: string
+  order: number
+  teacherCount?: number
+  lessonCount?: number
+}
+
 export interface Teacher {
   id: string
   name: string
@@ -8,6 +20,8 @@ export interface Teacher {
   classIds: string[]
   login: string
   photo: string
+  subjectId?: string | null
+  subjectName?: string
 }
 
 /** Logged-in identity: an admin/viewer user or a teacher. */
@@ -18,6 +32,8 @@ export interface SessionUser {
   role: Role
   title: string
   photo: string
+  subjectId?: string | null
+  subjectName?: string
 }
 
 export interface ClassGroup {
@@ -56,6 +72,8 @@ export interface Lesson {
   videoUrl: string
   durationMin: number
   status: LessonStatus
+  subjectId?: string | null
+  subjectName?: string
 }
 
 export interface QuarterInfo {

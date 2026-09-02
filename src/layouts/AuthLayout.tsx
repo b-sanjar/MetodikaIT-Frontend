@@ -37,10 +37,10 @@ export default function AuthLayout() {
           </span>
           <div>
             <h1 className="font-display text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-              Maktab IT Metodikasi
+              Maktab Metodikasi
             </h1>
             <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
-              Informatika darslari uchun yagona raqamli makon
+              Barcha maktab fanlari darslari uchun yagona raqamli makon
             </p>
           </div>
         </div>

@@ -4,6 +4,7 @@ import {
   BookOpen,
   CalendarPlus,
   GraduationCap,
+  Layers,
   Presentation,
   School,
   Sparkles,
@@ -23,13 +24,14 @@ import { formatDateLong, todayISO } from '../utils/format'
 export default function DashboardPage() {
   const { user } = useAuth()
   const { data, loading, error, reload } = useFetch(async () => {
-    const [grades, classes, students, teachers] = await Promise.all([
+    const [grades, classes, students, teachers, subjects] = await Promise.all([
       api.getGradeSummaries(),
       api.getClasses(),
       api.getStudents(),
       api.getTeachers(),
+      api.getSubjects(),
     ])
-    return { grades, classes, students, teachers }
+    return { grades, classes, students, teachers, subjects }
   })
 
   if (loading) return <Spinner />
@@ -66,7 +68,7 @@ export default function DashboardPage() {
             Xush kelibsiz, {user?.name.split(' ')[0] ?? ''}! 👋
           </h1>
           <p className="mt-1.5 max-w-xl text-sm text-white/80">
-            Bugungi darsga tayyorlanish, taqdimot o‘tkazish va baholash uchun hammasi shu yerda.
+            Maktab fanlari bo‘yicha darslarga tayyorlanish, taqdimot o‘tkazish va elektron jurnalda baholash.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Link
@@ -85,11 +87,22 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={BookOpen} label="Darslar" value={String(totalLessons)} hint="1–11-sinflar, 4 chorak" tone="indigo" />
-        <StatCard icon={School} label="Sinflar" value={String(data.classes.length)} hint="Faol sinf guruhlari" tone="emerald" />
-        <StatCard icon={Users} label="O‘quvchilar" value={String(data.students.length)} hint="Reytingda ishtirokda" tone="amber" />
-        <StatCard icon={GraduationCap} label="O‘qituvchilar" value={String(data.teachers.length)} hint="Informatika fani" tone="sky" />
+      <div className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Link to="/fanlar">
+          <StatCard icon={Layers} label="Fanlar" value={String(data.subjects.length)} hint="O‘quv fanlari" tone="indigo" />
+        </Link>
+        <Link to="/darslar">
+          <StatCard icon={BookOpen} label="Darslar" value={String(totalLessons)} hint="1–11-sinflar kesimida" tone="sky" />
+        </Link>
+        <Link to="/sinflar">
+          <StatCard icon={School} label="Sinflar" value={String(data.classes.length)} hint="Faol sinf guruhlari" tone="emerald" />
+        </Link>
+        <Link to="/oqituvchilar">
+          <StatCard icon={GraduationCap} label="O‘qituvchilar" value={String(data.teachers.length)} hint="Fan o‘qituvchilari" tone="rose" />
+        </Link>
+        <Link to="/oquvchilar">
+          <StatCard icon={Users} label="O‘quvchilar" value={String(data.students.length)} hint="Reytingda ishtirokda" tone="amber" />
+        </Link>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">

@@ -39,7 +39,7 @@ function buildSlides(lesson: Lesson): Slide[] {
       kicker: `${lesson.grade}-sinf · ${QUARTER_NAMES[lesson.quarter - 1]} · ${lesson.order}-dars`,
       icon: BookOpen,
       title: lesson.title,
-      paragraphs: ['Informatika va axborot texnologiyalari'],
+      paragraphs: [lesson.subjectName ? `${lesson.subjectName} fani` : 'Maktab fani'],
     },
     {
       kind: 'content',

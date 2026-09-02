@@ -17,7 +17,7 @@ export default function GradesPage() {
     <div className="animate-rise">
       <PageHeader
         title="Darslar"
-        subtitle="1-sinfdan 11-sinfgacha butun o‘quv yili — choraklar bo‘yicha tayyor ishlanmalar"
+        subtitle="1-sinfdan 11-sinfgacha barcha maktab fanlari — choraklar bo‘yicha tayyor dars ishlanmalari"
       />
       <div className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {grades.map((g) => {

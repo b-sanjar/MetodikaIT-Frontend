@@ -115,10 +115,10 @@ function PrintDoc({ lesson }: { lesson: Lesson }) {
     <article className="print-doc hidden print:block">
       <header>
         <div className="pd-brand">
-          <span className="pd-logo">IT</span>
+          <span className="pd-logo">{lesson.subjectName ? lesson.subjectName.slice(0, 2).toUpperCase() : 'MET'}</span>
           <div>
-            <p className="pd-brand-name">Metodika IT</p>
-            <p className="pd-brand-sub">Informatika fanidan dars ishlanmasi</p>
+            <p className="pd-brand-name">Maktab Metodikasi</p>
+            <p className="pd-brand-sub">{lesson.subjectName ? `${lesson.subjectName} fanidan dars ishlanmasi` : 'Dars ishlanmasi'}</p>
           </div>
           <span className="pd-date">{formatDateLong(todayISO())}</span>
         </div>

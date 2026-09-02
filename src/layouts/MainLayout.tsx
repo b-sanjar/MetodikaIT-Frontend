@@ -4,6 +4,7 @@ import {
   BookOpen,
   ClipboardList,
   GraduationCap,
+  Layers,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -23,6 +24,7 @@ import { cn } from '../utils/cn'
 
 const NAV = [
   { to: '/', label: 'Bosh sahifa', icon: LayoutDashboard, end: true },
+  { to: '/fanlar', label: 'Fanlar', icon: Layers },
   { to: '/darslar', label: 'Darslar', icon: BookOpen },
   { to: '/jurnal', label: 'Jurnal', icon: ClipboardList },
   { to: '/reyting', label: 'Reyting', icon: Trophy },
@@ -79,8 +81,8 @@ function Brand() {
         <MonitorPlay size={18} />
       </span>
       <div className="leading-tight">
-        <p className="font-display text-sm font-semibold text-gray-900 dark:text-white">Metodika IT</p>
-        <p className="text-[11px] text-gray-400 dark:text-gray-500">Maktab platformasi</p>
+        <p className="font-display text-sm font-semibold text-gray-900 dark:text-white">Maktab Metodikasi</p>
+        <p className="text-[11px] text-gray-400 dark:text-gray-500">Raqamli ta’lim platformasi</p>
       </div>
     </div>
   )

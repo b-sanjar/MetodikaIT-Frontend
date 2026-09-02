@@ -92,7 +92,7 @@ export default function GradeDetailPage() {
       </Link>
 
       <PageHeader
-        title={`${grade}-sinf informatika`}
+        title={`${grade}-sinf darslari`}
         subtitle={`${data.lessons.length} ta dars ishlanmasi · 4 chorak bo‘yicha taqsimlangan`}
         actions={
           canTeach && (

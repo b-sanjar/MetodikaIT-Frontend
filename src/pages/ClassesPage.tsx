@@ -176,12 +176,12 @@ export default function ClassesPage() {
                 />
               </Field>
             </div>
-            <Field label="Informatika o‘qituvchisi">
+            <Field label="Biriktirilgan fan o‘qituvchisi">
               <Select value={form.teacherId} onChange={(e) => setForm({ ...form, teacherId: e.target.value })}>
                 <option value="">Biriktirilmagan</option>
                 {data.teachers.map((t) => (
                   <option key={t.id} value={t.id}>
-                    {t.name}
+                    {t.name}{t.subjectName ? ` (${t.subjectName})` : ''}
                   </option>
                 ))}
               </Select>
