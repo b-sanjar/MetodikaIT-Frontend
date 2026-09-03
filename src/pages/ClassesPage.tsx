@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { GraduationCap, Pencil, Plus, Trash2, Users } from 'lucide-react'
+import { GraduationCap, Pencil, Plus, Trash2, UserCheck, Users } from 'lucide-react'
 import * as api from '../services/api'
 import { GRADES } from '../data/curriculum'
 import { useFetch } from '../hooks/useFetch'
@@ -17,6 +17,7 @@ interface FormState {
   grade: number
   letter: string
   teacherId: string
+  tutorId: string
 }
 
 export default function ClassesPage() {
@@ -38,7 +39,7 @@ export default function ClassesPage() {
   if (loading) return <Spinner />
   if (error || !data) return <ErrorState message={error ?? 'Ma’lumot topilmadi'} onRetry={reload} />
 
-  const teacherName = (id: string | null) => data.teachers.find((t) => t.id === id)?.name
+  const teacherName = (id: string | null | undefined) => (id ? data.teachers.find((t) => t.id === id)?.name : null)
   const studentCount = (id: string) => data.students.filter((s) => s.classId === id).length
 
   const submit = async (e: FormEvent) => {
@@ -51,14 +52,14 @@ export default function ClassesPage() {
         id: form.id,
         grade: form.grade,
         letter: form.letter.trim().toUpperCase(),
-        teacherId: form.teacherId,
+        teacherId: form.teacherId || null,
+        tutorId: form.tutorId || null,
       })
       setData((prev) => ({
         ...prev,
         classes: form.id ? prev.classes.map((c) => (c.id === saved.id ? saved : c)) : [...prev.classes, saved],
       }))
       setForm(null)
-      // teacher.classIds changed on the API side — refresh to stay in sync
       reload()
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Saqlashda xatolik')
@@ -86,12 +87,17 @@ export default function ClassesPage() {
     <div className="animate-rise">
       <PageHeader
         title="Sinflar"
-        subtitle="Sinf guruhlari, biriktirilgan o‘qituvchi va o‘quvchilar soni"
+        subtitle="Sinf guruhlari, biriktirilgan rahbar, tyutor va o‘quvchilar soni"
         actions={
           isAdmin && (
             <Button
               onClick={() => {
-                setForm({ grade: 1, letter: 'A', teacherId: data.teachers[0]?.id ?? '' })
+                setForm({
+                  grade: 1,
+                  letter: 'A',
+                  teacherId: data.teachers[0]?.id ?? '',
+                  tutorId: '',
+                })
                 setActionError(null)
               }}
             >
@@ -115,7 +121,13 @@ export default function ClassesPage() {
                   <div className="flex gap-1">
                     <button
                       onClick={() => {
-                        setForm({ id: c.id, grade: c.grade, letter: c.letter, teacherId: c.teacherId ?? '' })
+                        setForm({
+                          id: c.id,
+                          grade: c.grade,
+                          letter: c.letter,
+                          teacherId: c.teacherId ?? '',
+                          tutorId: c.tutorId ?? '',
+                        })
                         setActionError(null)
                       }}
                       aria-label="Tahrirlash"
@@ -141,10 +153,19 @@ export default function ClassesPage() {
               </h2>
               <div className="mt-3 flex flex-col gap-1.5 text-sm text-gray-500 dark:text-gray-400">
                 <span className="flex items-center gap-2">
-                  <GraduationCap size={14} /> {teacherName(c.teacherId) ?? 'O‘qituvchi biriktirilmagan'}
+                  <GraduationCap size={14} className="text-primary-500" />
+                  <span>
+                    Rahbar: <strong className="font-medium text-gray-800 dark:text-gray-200">{c.teacherName || teacherName(c.teacherId) || 'Belgilanmagan'}</strong>
+                  </span>
                 </span>
                 <span className="flex items-center gap-2">
-                  <Users size={14} /> {studentCount(c.id)} o‘quvchi
+                  <UserCheck size={14} className="text-indigo-500" />
+                  <span>
+                    Tyutor: <strong className="font-medium text-gray-800 dark:text-gray-200">{c.tutorName || teacherName(c.tutorId) || 'Belgilanmagan'}</strong>
+                  </span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <Users size={14} className="text-gray-400" /> {studentCount(c.id)} o‘quvchi
                 </span>
               </div>
             </Card>
@@ -176,9 +197,19 @@ export default function ClassesPage() {
                 />
               </Field>
             </div>
-            <Field label="Biriktirilgan fan o‘qituvchisi">
+            <Field label="Sinf rahbari (o‘qituvchi)">
               <Select value={form.teacherId} onChange={(e) => setForm({ ...form, teacherId: e.target.value })}>
-                <option value="">Biriktirilmagan</option>
+                <option value="">Rahbar belgilanmagan</option>
+                {data.teachers.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}{t.subjectName ? ` (${t.subjectName})` : ''}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Sinf tyutori">
+              <Select value={form.tutorId} onChange={(e) => setForm({ ...form, tutorId: e.target.value })}>
+                <option value="">Tyutor belgilanmagan</option>
                 {data.teachers.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name}{t.subjectName ? ` (${t.subjectName})` : ''}

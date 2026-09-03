@@ -21,7 +21,7 @@ interface FormState {
 }
 
 export default function StudentsPage() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, user } = useAuth()
   const [query, setQuery] = useState('')
   const [classFilter, setClassFilter] = useState('all')
   const [form, setForm] = useState<FormState | null>(null)
@@ -49,6 +49,18 @@ export default function StudentsPage() {
 
   if (loading) return <Spinner />
   if (error || !data) return <ErrorState message={error ?? 'Ma’lumot topilmadi'} onRetry={reload} />
+
+  // Permission check: only admin, class teacher (rahbar) or tutor can manage students of a class
+  const canManageClass = (classId: string) => {
+    if (isAdmin) return true
+    const c = data.classes.find((k) => k.id === classId)
+    return c?.teacherId === user?.id || c?.tutorId === user?.id
+  }
+
+  const manageableClasses = data.classes.filter(
+    (c) => isAdmin || c.teacherId === user?.id || c.tutorId === user?.id
+  )
+  const canAddStudent = manageableClasses.length > 0
 
   const className = (id: string) => {
     const c = data.classes.find((k) => k.id === id)
@@ -109,8 +121,13 @@ export default function StudentsPage() {
         title="O‘quvchilar"
         subtitle={`Jami ${data.students.length} o‘quvchi ro‘yxatda`}
         actions={
-          isAdmin && (
-            <Button onClick={() => { setForm({ name: '', classId: data.classes[0]?.id ?? '' }); setActionError(null) }}>
+          canAddStudent && (
+            <Button
+              onClick={() => {
+                setForm({ name: '', classId: manageableClasses[0]?.id ?? '' })
+                setActionError(null)
+              }}
+            >
               <Plus size={16} /> O‘quvchi qo‘shish
             </Button>
           )
@@ -147,7 +164,7 @@ export default function StudentsPage() {
                 <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">O‘quvchi</th>
                 <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Sinf</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">Ball</th>
-                {isAdmin && <th className="w-24 px-4 py-3" />}
+                {canAddStudent && <th className="w-24 px-4 py-3" />}
               </tr>
             </thead>
             <tbody>
@@ -169,24 +186,34 @@ export default function StudentsPage() {
                   <td className="px-4 py-3 text-right font-semibold text-gray-900 tabular-nums dark:text-white">
                     {s.points}
                   </td>
-                  {isAdmin && (
+                  {canAddStudent && (
                     <td className="px-4 py-3">
-                      <div className="flex justify-end gap-1">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setForm({ id: s.id, name: s.name, classId: s.classId }); setActionError(null) }}
-                          aria-label="Tahrirlash"
-                          className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-primary-500/10 hover:text-primary-500 cursor-pointer"
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setRemoving(s); setActionError(null) }}
-                          aria-label="O‘chirish"
-                          className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-500/10 hover:text-red-500 cursor-pointer"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
+                      {canManageClass(s.classId) && (
+                        <div className="flex justify-end gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setForm({ id: s.id, name: s.name, classId: s.classId })
+                              setActionError(null)
+                            }}
+                            aria-label="Tahrirlash"
+                            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-primary-500/10 hover:text-primary-500 cursor-pointer"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setRemoving(s)
+                              setActionError(null)
+                            }}
+                            aria-label="O‘chirish"
+                            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-500/10 hover:text-red-500 cursor-pointer"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   )}
                 </tr>
@@ -219,7 +246,7 @@ export default function StudentsPage() {
             </Field>
             <Field label="Sinf">
               <Select value={form.classId} onChange={(e) => setForm({ ...form, classId: e.target.value })}>
-                {data.classes.map((c) => (
+                {manageableClasses.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.grade}-«{c.letter}» sinf
                   </option>
@@ -241,18 +268,23 @@ export default function StudentsPage() {
 
       {/* Delete confirm */}
       <Modal open={removing !== null} title="O‘quvchini o‘chirish" onClose={() => setRemoving(null)}>
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          <strong>{removing?.name}</strong> ro‘yxatdan o‘chirilsinmi? Jurnal yozuvlari ham o‘chadi.
-        </p>
-        {actionError && <p className="mt-3 text-sm text-red-500">{actionError}</p>}
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => setRemoving(null)}>
-            Bekor qilish
-          </Button>
-          <Button variant="danger" onClick={remove} disabled={saving}>
-            {saving ? 'O‘chirilmoqda...' : 'O‘chirish'}
-          </Button>
-        </div>
+        {removing && (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Haqiqatan ham <strong className="text-gray-900 dark:text-white">{removing.name}</strong>ni ro‘yxatdan
+              o‘chirmoqchimisiz? Uning to‘plagan ballari va yutuqlari ham o‘chiriladi.
+            </p>
+            {actionError && <p className="text-sm text-red-500">{actionError}</p>}
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setRemoving(null)}>
+                Bekor qilish
+              </Button>
+              <Button variant="danger" onClick={remove} disabled={saving}>
+                {saving ? 'O‘chirilmoqda...' : 'O‘chirish'}
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   )

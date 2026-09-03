@@ -52,8 +52,21 @@ export default function JournalPage() {
   const { data: classes, loading: classesLoading, error: classesError, reload: reloadClasses } = useFetch(
     () => api.getClasses(),
   )
-  const activeClassId = classId || classes?.[0]?.id || ''
-  const activeClass = classes?.find((c) => c.id === activeClassId)
+
+  // Classes available to this user:
+  // Admin sees all classes.
+  // Teacher only sees classes where they are sinf rahbari, tutor, or assigned to teach.
+  const availableClasses = (classes || []).filter((c) => {
+    if (isAdmin) return true
+    return (
+      c.teacherId === user?.id ||
+      c.tutorId === user?.id ||
+      (user?.classIds || []).includes(c.id)
+    )
+  })
+
+  const activeClassId = classId || availableClasses[0]?.id || ''
+  const activeClass = availableClasses.find((c) => c.id === activeClassId)
 
   const { data, loading, error, reload, setData } = useFetch(
     async () => {
@@ -71,10 +84,21 @@ export default function JournalPage() {
 
   if (classesLoading) return <Spinner />
   if (classesError) return <ErrorState message={classesError} onRetry={reloadClasses} />
-  if (!classes?.length) return <EmptyState title="Sinflar topilmadi" />
+  if (!availableClasses.length)
+    return (
+      <EmptyState
+        title="Biriktirilgan sinflar topilmadi"
+        hint="Sizga dars o‘tish yoki rahbarlik qilish uchun hali sinflar biriktirilmagan. Administratorga murojaat qiling."
+      />
+    )
 
-  // Admin grades anywhere; a teacher only in their own classes
-  const canGrade = isAdmin || (user?.role === 'teacher' && activeClass?.teacherId === user.id)
+  // Admin grades anywhere; a teacher grades in their assigned/led classes
+  const canGrade =
+    isAdmin ||
+    (user?.role === 'teacher' &&
+      (activeClass?.teacherId === user.id ||
+        activeClass?.tutorId === user.id ||
+        (user?.classIds || []).includes(activeClass?.id || '')))
 
   const lessonTitle = (lessonId: string) => data?.lessons.find((l) => l.id === lessonId)?.title ?? 'Mavzu'
 
@@ -144,7 +168,7 @@ export default function JournalPage() {
         actions={
           <>
             <Select value={activeClassId} onChange={(e) => setClassId(e.target.value)} className="w-40">
-              {classes.map((c) => (
+              {availableClasses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.grade}-«{c.letter}» sinf
                 </option>

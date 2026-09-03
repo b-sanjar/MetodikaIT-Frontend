@@ -55,6 +55,7 @@ const PODIUM = [
 export default function LeaderboardPage() {
   const { canTeach } = useAuth()
   const [classFilter, setClassFilter] = useState('all')
+  const [subjectFilter, setSubjectFilter] = useState('all')
   const [period, setPeriod] = useState<LeaderboardPeriod>('all')
   const [viewingId, setViewingId] = useState<string | null>(null)
   const [rewarding, setRewarding] = useState<Student | null>(null)
@@ -64,12 +65,13 @@ export default function LeaderboardPage() {
   const [saveError, setSaveError] = useState<string | null>(null)
 
   const { data, loading, error, reload, setData } = useFetch(async () => {
-    const [students, classes, badgeDefs] = await Promise.all([
+    const [students, classes, badgeDefs, subjects] = await Promise.all([
       api.getStudents(),
       api.getClasses(),
       api.getBadgeDefs(),
+      api.getSubjects(),
     ])
-    return { students, classes, badgeDefs }
+    return { students, classes, badgeDefs, subjects }
   })
 
   const {
@@ -78,8 +80,13 @@ export default function LeaderboardPage() {
     error: boardError,
     reload: reloadBoard,
   } = useFetch(
-    () => api.getLeaderboard(period, classFilter === 'all' ? undefined : classFilter),
-    [period, classFilter],
+    () =>
+      api.getLeaderboard(
+        period,
+        classFilter === 'all' ? undefined : classFilter,
+        subjectFilter === 'all' ? undefined : subjectFilter,
+      ),
+    [period, classFilter, subjectFilter],
   )
 
   const ranked = useMemo<RankedStudent[]>(() => {
@@ -135,34 +142,54 @@ export default function LeaderboardPage() {
         title="O‘quvchilar reytingi"
         subtitle="Ball, unvon va yutuqlar — o‘quvchini bosib to‘liq profilini ko‘ring"
         actions={
-          <Select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="w-44">
-            <option value="all">Barcha sinflar</option>
-            {data.classes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.grade}-«{c.letter}» sinf
-              </option>
-            ))}
-          </Select>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)} className="w-44">
+              <option value="all">Barcha fanlar</option>
+              {data.subjects.map((sub) => (
+                <option key={sub.id} value={sub.id}>
+                  {sub.name}
+                </option>
+              ))}
+            </Select>
+            <Select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="w-40">
+              <option value="all">Barcha sinflar</option>
+              {data.classes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.grade}-«{c.letter}» sinf
+                </option>
+              ))}
+            </Select>
+          </div>
         }
       />
 
-      {/* Period tabs */}
-      <div className="mb-5 flex w-fit gap-1 rounded-lg border border-gray-100 bg-gray-50/60 p-1 dark:border-edge dark:bg-surface-2">
-        {PERIODS.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => setPeriod(p.id)}
-            className={cn(
-              'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-              period === p.id
-                ? 'bg-white text-gray-900 shadow-sm dark:bg-white/10 dark:text-white'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200',
-            )}
-          >
-            {p.label}
-          </button>
-        ))}
+      {/* Period tabs & active filter badge */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex w-fit gap-1 rounded-lg border border-gray-100 bg-gray-50/60 p-1 dark:border-edge dark:bg-surface-2">
+          {PERIODS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setPeriod(p.id)}
+              className={cn(
+                'rounded-md px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer',
+                period === p.id
+                  ? 'bg-white text-gray-900 shadow-sm dark:bg-white/10 dark:text-white'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200',
+              )}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="font-semibold text-primary-500">
+            {subjectFilter === 'all'
+              ? 'Barcha fanlar'
+              : data.subjects.find((s) => s.id === subjectFilter)?.name || 'Tanlangan fan'}
+          </span>{' '}
+          bo‘yicha reyting · {ranked.length} ta o‘quvchi
+        </div>
       </div>
 
       {!ranked.length ? (

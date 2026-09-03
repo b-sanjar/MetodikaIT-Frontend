@@ -146,7 +146,12 @@ export function getClasses(): Promise<ClassGroup[]> {
 }
 
 export function saveClass(data: Omit<ClassGroup, 'id'> & { id?: string }): Promise<ClassGroup> {
-  const body = JSON.stringify({ grade: data.grade, letter: data.letter, teacherId: data.teacherId || null })
+  const body = JSON.stringify({
+    grade: data.grade,
+    letter: data.letter,
+    teacherId: data.teacherId || null,
+    tutorId: data.tutorId || null,
+  })
   return data.id
     ? request<ClassGroup>(`/api/classes/${data.id}`, { method: 'PATCH', body })
     : request<ClassGroup>('/api/classes', { method: 'POST', body })
@@ -235,8 +240,16 @@ export function getStudentJournal(studentId: string): Promise<JournalEntry[]> {
   return request<JournalEntry[]>(`/api/students/${studentId}/journal`)
 }
 
-export function getLeaderboard(period: LeaderboardPeriod, classId?: string): Promise<LeaderboardEntry[]> {
-  return request<LeaderboardEntry[]>(`/api/leaderboard?period=${period}${classId ? `&classId=${classId}` : ''}`)
+export function getLeaderboard(
+  period: LeaderboardPeriod,
+  classId?: string,
+  subjectId?: string
+): Promise<LeaderboardEntry[]> {
+  const params = new URLSearchParams()
+  params.set('period', period)
+  if (classId && classId !== 'all') params.set('classId', classId)
+  if (subjectId && subjectId !== 'all') params.set('subjectId', subjectId)
+  return request<LeaderboardEntry[]>(`/api/leaderboard?${params.toString()}`)
 }
 
 export function getBadgeDefs(): Promise<BadgeDef[]> {

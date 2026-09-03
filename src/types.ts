@@ -38,6 +38,7 @@ export interface SessionUser {
   subjectIds?: string[]
   subjectName?: string
   subjectNames?: string[]
+  classIds?: string[]
 }
 
 export interface ClassGroup {
@@ -46,6 +47,9 @@ export interface ClassGroup {
   letter: string
   /** null — rahbari o‘chirilgan/biriktirilmagan sinf */
   teacherId: string | null
+  tutorId: string | null
+  teacherName?: string
+  tutorName?: string
 }
 
 export interface Student {
