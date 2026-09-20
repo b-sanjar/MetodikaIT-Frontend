@@ -20,6 +20,7 @@ const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'))
 const StudentsPage = lazy(() => import('./pages/StudentsPage'))
 const TeachersPage = lazy(() => import('./pages/TeachersPage'))
 const SubjectsPage = lazy(() => import('./pages/SubjectsPage'))
+const ParentPortalPage = lazy(() => import('./pages/ParentPortalPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 function SuspenseFallback() {
@@ -63,6 +64,8 @@ export default function App() {
         <BrowserRouter>
           <Suspense fallback={<SuspenseFallback />}>
             <Routes>
+              <Route path="/ota-ona" element={<ParentPortalPage />} />
+
               <Route element={<RedirectIfAuthed />}>
                 <Route element={<AuthLayout />}>
                   <Route path="/kirish" element={<LoginPage />} />

@@ -56,8 +56,75 @@ export interface Student {
   id: string
   name: string
   classId: string
+  code?: string
   points: number
   badges: string[]
+}
+
+export interface PublicStudentRank {
+  position: number
+  total: number
+}
+
+export interface PublicStudentSubjectStat {
+  subjectId: string
+  subjectName: string
+  color?: string
+  icon?: string
+  grades: number[]
+  averageGrade: number | null
+  totalPoints: number
+}
+
+export interface PublicStudentRecentEvent {
+  id: string
+  date: string
+  delta: number
+  source: 'journal' | 'reward'
+  reason: string
+  badgeId: string | null
+}
+
+export interface PublicStudentData {
+  id: string
+  name: string
+  code: string
+  classId: string
+  className: string
+  grade: number
+  letter: string
+  points: number
+  badges: string[]
+  ranks: {
+    school: PublicStudentRank
+    parallel: PublicStudentRank
+    class: PublicStudentRank
+  }
+  attendance: {
+    totalLessons: number
+    present: number
+    absent: number
+    late: number
+    ratePercent: number
+  }
+  subjectStats: PublicStudentSubjectStat[]
+  recentEvents: PublicStudentRecentEvent[]
+}
+
+export interface PublicLeaderboardEntry {
+  studentId: string
+  name: string
+  code: string
+  classId: string
+  className: string
+  grade: number
+  points: number
+  position: number
+}
+
+export interface PublicMeta {
+  subjects: { id: string; name: string; code?: string; icon?: string; color?: string }[]
+  classes: { id: string; grade: number; letter: string; name: string }[]
 }
 
 export type LessonStatus = 'ready' | 'draft'

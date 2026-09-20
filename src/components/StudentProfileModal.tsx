@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { Award, BookOpen, CalendarCheck, Flame, History, Lock, Sparkles, Star } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Award, BookOpen, CalendarCheck, Check, Copy, Flame, History, Lock, Sparkles, Star } from 'lucide-react'
 import * as api from '../services/api'
 import { useFetch } from '../hooks/useFetch'
 import { useCountUp } from '../hooks/useCountUp'
@@ -40,6 +40,7 @@ export default function StudentProfileModal({ student, position, classLabel, bad
   )
 
   const points = useCountUp(student?.points ?? 0)
+  const [copiedLink, setCopiedLink] = useState(false)
 
   const stats = useMemo(() => computeStats(data?.[0] ?? []), [data])
   const history = data?.[1] ?? []
@@ -92,6 +93,39 @@ export default function StudentProfileModal({ student, position, classLabel, bad
 
           <p className="font-display mt-3 text-xl font-semibold text-gray-900 dark:text-white">{student.name}</p>
           <p className="text-xs text-gray-400">{classLabel} sinf o‘quvchisi</p>
+
+          {student.code && (
+            <div className="mt-2.5 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  const url = `${window.location.origin}/ota-ona?code=${student.code}`
+                  navigator.clipboard.writeText(url)
+                  setCopiedLink(true)
+                  setTimeout(() => setCopiedLink(false), 2000)
+                }}
+                title="Ota-ona havolasi va PIN-kodni nusxalash"
+                className={cn(
+                  'inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-mono font-semibold transition-all cursor-pointer shadow-xs',
+                  copiedLink
+                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400'
+                    : 'border-gray-200 bg-white/80 text-gray-700 hover:border-primary-400 hover:text-primary-600 dark:border-edge dark:bg-surface-2 dark:text-gray-200 dark:hover:border-primary-500/60 dark:hover:text-primary-400',
+                )}
+              >
+                {copiedLink ? (
+                  <>
+                    <Check size={14} className="text-emerald-500" />
+                    <span>Havola va PIN nusxalandi! ✓</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={14} className="text-gray-400" />
+                    <span>PIN: {student.code} (Nusxalash)</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
 
           <span
             className={cn(

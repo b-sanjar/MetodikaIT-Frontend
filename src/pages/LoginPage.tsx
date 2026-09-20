@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { CircleAlert, Eye, EyeOff, LoaderCircle, LogIn } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { CircleAlert, Eye, EyeOff, LoaderCircle, LogIn, Sparkles } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Button from '../components/Button'
 import Card from '../components/Card'
@@ -77,6 +77,21 @@ export default function LoginPage() {
           Kirish
         </Button>
       </form>
+
+      <div className="relative my-4 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-200 dark:border-edge" />
+        </div>
+        <span className="relative bg-white px-2 text-xs text-gray-400 dark:bg-surface">yoki</span>
+      </div>
+
+      <Link
+        to="/ota-ona"
+        className="flex items-center justify-center gap-2 rounded-xl border border-primary-500/30 bg-primary-500/5 px-4 py-2.5 text-center text-xs font-semibold text-primary-600 transition-all hover:bg-primary-500/10 dark:border-primary-400/20 dark:bg-primary-400/10 dark:text-primary-400"
+      >
+        <Sparkles size={15} />
+        Ota-onalar portali (Farzand PIN-kodi orqali)
+      </Link>
     </Card>
   )
 }

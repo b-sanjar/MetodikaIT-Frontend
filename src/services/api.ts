@@ -13,6 +13,9 @@ import type {
   LeaderboardPeriod,
   Lesson,
   PointsEvent,
+  PublicLeaderboardEntry,
+  PublicMeta,
+  PublicStudentData,
   QuarterInfo,
   SessionUser,
   Student,
@@ -22,6 +25,8 @@ import type {
 
 const BASE_URL: string = import.meta.env.VITE_API_URL ?? 'https://metodikait-backend.onrender.com'
 const TOKEN_KEY = 'mit:token'
+const PARENT_TOKEN_KEY = 'mit:parent_token'
+const PARENT_CODE_KEY = 'mit:parent_code'
 
 export function hasToken(): boolean {
   return Boolean(localStorage.getItem(TOKEN_KEY))
@@ -35,7 +40,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     return inFlightGets.get(path) as Promise<T>
   }
 
-  const token = localStorage.getItem(TOKEN_KEY)
+  const userToken = localStorage.getItem(TOKEN_KEY)
+  const parentToken = localStorage.getItem(PARENT_TOKEN_KEY)
+  const parentCode = localStorage.getItem(PARENT_CODE_KEY)
+  const activeToken = userToken || parentToken
+
   const reqPromise = (async () => {
     let res: Response
     try {
@@ -43,15 +52,19 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
         ...options,
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+          ...(parentCode ? { 'X-Parent-Code': parentCode } : {}),
           ...options.headers,
         },
       })
     } catch {
       throw new Error('Server bilan aloqa yo‘q — internetni tekshiring')
     }
-    // Expired/invalid token — drop it so the next app load lands on login
-    if (res.status === 401 && token) localStorage.removeItem(TOKEN_KEY)
+    // Expired/invalid token — drop it
+    if (res.status === 401) {
+      if (userToken) localStorage.removeItem(TOKEN_KEY)
+      if (parentToken) localStorage.removeItem(PARENT_TOKEN_KEY)
+    }
     if (res.status === 204) return null as T
     const data = await res.json().catch(() => null)
     if (!res.ok) throw new Error(data?.detail ?? 'Xatolik yuz berdi')
@@ -322,4 +335,53 @@ export function setJournalCell(
     method: 'PUT',
     body: JSON.stringify({ classId, studentId, date, ...patch }),
   })
+}
+
+// ---------- Public Parent Portal ----------
+
+export function getPublicMeta(): Promise<PublicMeta> {
+  return request<PublicMeta>('/api/public/meta')
+}
+
+export function getPublicStudent(code: string): Promise<PublicStudentData> {
+  return request<PublicStudentData>(`/api/public/student?code=${encodeURIComponent(code)}`)
+}
+
+export function getPublicLeaderboard(params: {
+  scope?: 'school' | 'parallel' | 'class'
+  grade?: number
+  classId?: string
+  subjectId?: string
+  period?: LeaderboardPeriod
+}): Promise<PublicLeaderboardEntry[]> {
+  const qs = new URLSearchParams()
+  if (params.scope) qs.set('scope', params.scope)
+  if (params.grade) qs.set('grade', String(params.grade))
+  if (params.classId && params.classId !== 'all') qs.set('classId', params.classId)
+  if (params.subjectId && params.subjectId !== 'all') qs.set('subjectId', params.subjectId)
+  if (params.period && params.period !== 'all') qs.set('period', params.period)
+
+  const query = qs.toString() ? `?${qs.toString()}` : ''
+  return request<PublicLeaderboardEntry[]>(`/api/public/leaderboard${query}`)
+}
+
+export async function verifyParentCode(code: string): Promise<{ token: string; student: PublicStudentData }> {
+  const res = await request<{ token: string; student: PublicStudentData }>('/api/public/verify', {
+    method: 'POST',
+    body: JSON.stringify({ code: code.trim() }),
+  })
+  if (res && res.token) {
+    localStorage.setItem(PARENT_TOKEN_KEY, res.token)
+    localStorage.setItem(PARENT_CODE_KEY, code.trim())
+  }
+  return res
+}
+
+export function logoutParent(): void {
+  localStorage.removeItem(PARENT_TOKEN_KEY)
+  localStorage.removeItem(PARENT_CODE_KEY)
+}
+
+export function getParentCode(): string | null {
+  return localStorage.getItem(PARENT_CODE_KEY)
 }

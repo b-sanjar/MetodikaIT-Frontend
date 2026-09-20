@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Check, Copy, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import * as api from '../services/api'
 import { useFetch } from '../hooks/useFetch'
 import { useAuth } from '../context/AuthContext'
@@ -12,6 +12,7 @@ import PageHeader from '../components/PageHeader'
 import StudentProfileModal from '../components/StudentProfileModal'
 import { Field, Input, Select } from '../components/Field'
 import { EmptyState, ErrorState, Spinner } from '../components/States'
+import { cn } from '../utils/cn'
 import type { Student } from '../types'
 
 interface FormState {
@@ -27,6 +28,7 @@ export default function StudentsPage() {
   const [form, setForm] = useState<FormState | null>(null)
   const [removing, setRemoving] = useState<Student | null>(null)
   const [viewingId, setViewingId] = useState<string | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
@@ -163,6 +165,7 @@ export default function StudentsPage() {
               <tr className="border-b border-gray-100 text-left dark:border-edge">
                 <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">O‘quvchi</th>
                 <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Sinf</th>
+                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Ota-ona PIN</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">Ball</th>
                 {canAddStudent && <th className="w-24 px-4 py-3" />}
               </tr>
@@ -182,6 +185,37 @@ export default function StudentsPage() {
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <Chip tone="primary">{className(s.classId)} sinf</Chip>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const url = `${window.location.origin}/ota-ona?code=${s.code || s.id}`
+                        navigator.clipboard.writeText(url)
+                        setCopiedId(s.id)
+                        setTimeout(() => setCopiedId(null), 2000)
+                      }}
+                      title="Ota-ona havolasi va PIN-kodni nusxalash"
+                      className={cn(
+                        'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-mono font-semibold transition-all cursor-pointer shadow-xs',
+                        copiedId === s.id
+                          ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400'
+                          : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600 dark:border-edge dark:bg-surface-2 dark:text-gray-200 dark:hover:border-primary-500/50 dark:hover:bg-white/5 dark:hover:text-primary-400',
+                      )}
+                    >
+                      {copiedId === s.id ? (
+                        <>
+                          <Check size={13} className="text-emerald-500" />
+                          <span>Nusxalandi! ✓</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={13} className="text-gray-400" />
+                          <span>PIN: {s.code || s.id}</span>
+                        </>
+                      )}
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-right font-semibold text-gray-900 tabular-nums dark:text-white">
                     {s.points}
