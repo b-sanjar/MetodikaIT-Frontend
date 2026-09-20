@@ -27,27 +27,43 @@ export function hasToken(): boolean {
   return Boolean(localStorage.getItem(TOKEN_KEY))
 }
 
+const inFlightGets = new Map<string, Promise<any>>()
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem(TOKEN_KEY)
-  let res: Response
-  try {
-    res = await fetch(BASE_URL + path, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options.headers,
-      },
-    })
-  } catch {
-    throw new Error('Server bilan aloqa yo‘q — internetni tekshiring')
+  const isGet = !options.method || options.method.toUpperCase() === 'GET'
+  if (isGet && inFlightGets.has(path)) {
+    return inFlightGets.get(path) as Promise<T>
   }
-  // Expired/invalid token — drop it so the next app load lands on login
-  if (res.status === 401 && token) localStorage.removeItem(TOKEN_KEY)
-  if (res.status === 204) return null as T
-  const data = await res.json().catch(() => null)
-  if (!res.ok) throw new Error(data?.detail ?? 'Xatolik yuz berdi')
-  return data as T
+
+  const token = localStorage.getItem(TOKEN_KEY)
+  const reqPromise = (async () => {
+    let res: Response
+    try {
+      res = await fetch(BASE_URL + path, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...options.headers,
+        },
+      })
+    } catch {
+      throw new Error('Server bilan aloqa yo‘q — internetni tekshiring')
+    }
+    // Expired/invalid token — drop it so the next app load lands on login
+    if (res.status === 401 && token) localStorage.removeItem(TOKEN_KEY)
+    if (res.status === 204) return null as T
+    const data = await res.json().catch(() => null)
+    if (!res.ok) throw new Error(data?.detail ?? 'Xatolik yuz berdi')
+    return data as T
+  })()
+
+  if (isGet) {
+    inFlightGets.set(path, reqPromise)
+    reqPromise.finally(() => inFlightGets.delete(path))
+  }
+
+  return reqPromise
 }
 
 // ---------- Auth & profile ----------
@@ -191,11 +207,24 @@ export function deleteTeacher(id: string): Promise<void> {
 
 // ---------- Subjects ----------
 
-export function getSubjects(): Promise<Subject[]> {
-  return request<Subject[]>('/api/subjects')
+let cachedSubjects: { data: Subject[]; time: number } | null = null
+
+export function clearSubjectCache() {
+  cachedSubjects = null
+}
+
+export async function getSubjects(): Promise<Subject[]> {
+  const now = Date.now()
+  if (cachedSubjects && now - cachedSubjects.time < 120_000) {
+    return cachedSubjects.data
+  }
+  const subjects = await request<Subject[]>('/api/subjects')
+  cachedSubjects = { data: subjects, time: now }
+  return subjects
 }
 
 export function saveSubject(data: Partial<Subject> & { id?: string }): Promise<Subject> {
+  clearSubjectCache()
   const { id, ...fields } = data
   const body = JSON.stringify(fields)
   return id
@@ -204,6 +233,7 @@ export function saveSubject(data: Partial<Subject> & { id?: string }): Promise<S
 }
 
 export function deleteSubject(id: string): Promise<void> {
+  clearSubjectCache()
   return request<void>(`/api/subjects/${id}`, { method: 'DELETE' })
 }
 
@@ -252,8 +282,13 @@ export function getLeaderboard(
   return request<LeaderboardEntry[]>(`/api/leaderboard?${params.toString()}`)
 }
 
-export function getBadgeDefs(): Promise<BadgeDef[]> {
-  return request<BadgeDef[]>('/api/badges')
+let cachedBadges: BadgeDef[] | null = null
+
+export async function getBadgeDefs(): Promise<BadgeDef[]> {
+  if (cachedBadges) return cachedBadges
+  const badges = await request<BadgeDef[]>('/api/badges')
+  cachedBadges = badges
+  return badges
 }
 
 // ---------- Journal ----------

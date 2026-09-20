@@ -31,7 +31,8 @@ export function useFetch<T>(loader: () => Promise<T>, deps: unknown[] = []) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
-  const loading = result.key !== key
+  const initialLoading = result.key !== key && result.data === null
+  const isRefetching = result.key !== key && result.data !== null
   const reload = useCallback(() => setTick((t) => t + 1), [])
 
   const setData = useCallback((updater: (prev: T) => T) => {
@@ -39,9 +40,10 @@ export function useFetch<T>(loader: () => Promise<T>, deps: unknown[] = []) {
   }, [])
 
   return {
-    data: loading ? null : result.data,
-    loading,
-    error: loading ? null : result.error,
+    data: result.data,
+    loading: initialLoading,
+    isRefetching,
+    error: initialLoading ? null : result.error,
     reload,
     setData,
   }

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { BookOpen, CalendarPlus, Check, Clock3, X } from 'lucide-react'
 import * as api from '../services/api'
 import { QUARTER_NAMES } from '../data/curriculum'
@@ -82,6 +82,45 @@ export default function JournalPage() {
     [activeClass?.id],
   )
 
+  const entryMap = useMemo(() => {
+    const map = new Map<string, JournalEntry>()
+    if (data?.journal) {
+      for (const j of data.journal) {
+        map.set(`${j.studentId}:${j.date}`, j)
+      }
+    }
+    return map
+  }, [data?.journal])
+
+  const lessonMap = useMemo(() => {
+    const map = new Map<string, string>()
+    if (data?.lessons) {
+      for (const l of data.lessons) {
+        map.set(l.id, l.title)
+      }
+    }
+    return map
+  }, [data?.lessons])
+
+  const studentStats = useMemo(() => {
+    const map = new Map<string, string>()
+    if (!data?.students || !data?.journal) return map
+    for (const s of data.students) {
+      let sum = 0
+      let count = 0
+      for (const j of data.journal) {
+        if (j.studentId === s.id && j.grade != null) {
+          sum += j.grade
+          count++
+        }
+      }
+      map.set(s.id, count ? (sum / count).toFixed(1) : '—')
+    }
+    return map
+  }, [data?.students, data?.journal])
+
+  const lessonTitle = (lessonId: string) => lessonMap.get(lessonId) ?? 'Mavzu'
+
   if (classesLoading) return <Spinner />
   if (classesError) return <ErrorState message={classesError} onRetry={reloadClasses} />
   if (!availableClasses.length)
@@ -96,11 +135,9 @@ export default function JournalPage() {
   const canGrade =
     isAdmin ||
     (user?.role === 'teacher' &&
-      (activeClass?.teacherId === user.id ||
-        activeClass?.tutorId === user.id ||
+      (activeClass?.teacherId === user?.id ||
+        activeClass?.tutorId === user?.id ||
         (user?.classIds || []).includes(activeClass?.id || '')))
-
-  const lessonTitle = (lessonId: string) => data?.lessons.find((l) => l.id === lessonId)?.title ?? 'Mavzu'
 
   const openCell = (target: CellTarget) => {
     if (!canGrade) return
@@ -215,11 +252,7 @@ export default function JournalPage() {
             </thead>
             <tbody>
               {data.students.map((s) => {
-                const entries = data.journal.filter((j) => j.studentId === s.id)
-                const graded = entries.filter((e) => e.grade != null)
-                const avg = graded.length
-                  ? (graded.reduce((sum, e) => sum + (e.grade ?? 0), 0) / graded.length).toFixed(1)
-                  : '—'
+                const avg = studentStats.get(s.id) ?? '—'
                 return (
                   <tr key={s.id} className="border-b border-gray-50 transition-colors last:border-0 hover:bg-primary-500/3 dark:border-edge/50">
                     <td className="sticky left-0 bg-white/90 px-4 py-2.5 backdrop-blur dark:bg-surface/90">
@@ -229,7 +262,7 @@ export default function JournalPage() {
                       </div>
                     </td>
                     {data.columns.map((col) => {
-                      const entry = entries.find((e) => e.date === col.date)
+                      const entry = entryMap.get(`${s.id}:${col.date}`)
                       return (
                         <td key={col.id} className="px-3 py-2.5 text-center">
                           <button

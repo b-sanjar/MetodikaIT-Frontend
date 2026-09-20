@@ -89,15 +89,23 @@ export default function LeaderboardPage() {
     [period, classFilter, subjectFilter],
   )
 
+  const studentMap = useMemo(() => {
+    return new Map(data?.students.map((s) => [s.id, s]))
+  }, [data?.students])
+
+  const classMap = useMemo(() => {
+    return new Map(data?.classes.map((c) => [c.id, `${c.grade}-«${c.letter}»`]))
+  }, [data?.classes])
+
   const ranked = useMemo<RankedStudent[]>(() => {
     if (!data || !board) return []
     return board
       .map((e) => {
-        const s = data.students.find((st) => st.id === e.studentId)
+        const s = studentMap.get(e.studentId)
         return s ? { ...s, periodPoints: e.points } : null
       })
       .filter((s): s is RankedStudent => s !== null)
-  }, [data, board])
+  }, [data, board, studentMap])
 
   if (loading || boardLoading) return <Spinner />
   if (error || !data) return <ErrorState message={error ?? 'Ma’lumot topilmadi'} onRetry={reload} />
@@ -105,10 +113,7 @@ export default function LeaderboardPage() {
 
   const badgeDefs = data.badgeDefs
 
-  const className = (id: string) => {
-    const c = data.classes.find((k) => k.id === id)
-    return c ? `${c.grade}-«${c.letter}»` : '—'
-  }
+  const className = (id: string) => classMap.get(id) ?? '—'
 
   const giveReward = async () => {
     if (!rewarding) return
