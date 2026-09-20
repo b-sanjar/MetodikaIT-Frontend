@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Award, BookOpen, CalendarCheck, Check, Copy, Flame, History, Lock, Sparkles, Star } from 'lucide-react'
+import { Award, BookOpen, CalendarCheck, Check, Copy, Flame, History, Link2, Lock, Sparkles, Star } from 'lucide-react'
 import * as api from '../services/api'
 import { useFetch } from '../hooks/useFetch'
 import { useCountUp } from '../hooks/useCountUp'
@@ -40,6 +40,7 @@ export default function StudentProfileModal({ student, position, classLabel, bad
   )
 
   const points = useCountUp(student?.points ?? 0)
+  const [copiedPin, setCopiedPin] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
 
   const stats = useMemo(() => computeStats(data?.[0] ?? []), [data])
@@ -95,7 +96,35 @@ export default function StudentProfileModal({ student, position, classLabel, bad
           <p className="text-xs text-gray-400">{classLabel} sinf o‘quvchisi</p>
 
           {student.code && (
-            <div className="mt-2.5 flex items-center justify-center">
+            <div className="mt-2.5 flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(student.code || '')
+                  setCopiedPin(true)
+                  setTimeout(() => setCopiedPin(false), 2000)
+                }}
+                title="Faqat PIN-kodni nusxalash"
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-mono font-semibold transition-all cursor-pointer shadow-xs',
+                  copiedPin
+                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400'
+                    : 'border-gray-200 bg-white/80 text-gray-700 hover:border-primary-400 hover:text-primary-600 dark:border-edge dark:bg-surface-2 dark:text-gray-200 dark:hover:border-primary-500/60 dark:hover:text-primary-400',
+                )}
+              >
+                {copiedPin ? (
+                  <>
+                    <Check size={14} className="text-emerald-500" />
+                    <span>Kod nusxalandi! ✓</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={14} className="text-gray-400" />
+                    <span>PIN: {student.code}</span>
+                  </>
+                )}
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -104,9 +133,9 @@ export default function StudentProfileModal({ student, position, classLabel, bad
                   setCopiedLink(true)
                   setTimeout(() => setCopiedLink(false), 2000)
                 }}
-                title="Ota-ona havolasi va PIN-kodni nusxalash"
+                title="Ota-ona uchun to‘g‘ridan-to‘g‘ri havolani (link) nusxalash"
                 className={cn(
-                  'inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-mono font-semibold transition-all cursor-pointer shadow-xs',
+                  'inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-all cursor-pointer shadow-xs',
                   copiedLink
                     ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400'
                     : 'border-gray-200 bg-white/80 text-gray-700 hover:border-primary-400 hover:text-primary-600 dark:border-edge dark:bg-surface-2 dark:text-gray-200 dark:hover:border-primary-500/60 dark:hover:text-primary-400',
@@ -115,12 +144,12 @@ export default function StudentProfileModal({ student, position, classLabel, bad
                 {copiedLink ? (
                   <>
                     <Check size={14} className="text-emerald-500" />
-                    <span>Havola va PIN nusxalandi! ✓</span>
+                    <span>Havola nusxalandi! ✓</span>
                   </>
                 ) : (
                   <>
-                    <Copy size={14} className="text-gray-400" />
-                    <span>PIN: {student.code} (Nusxalash)</span>
+                    <Link2 size={14} className="text-gray-400" />
+                    <span>Havola</span>
                   </>
                 )}
               </button>

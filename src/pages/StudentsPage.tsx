@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { Check, Copy, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Check, Copy, Link2, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import * as api from '../services/api'
 import { useFetch } from '../hooks/useFetch'
 import { useAuth } from '../context/AuthContext'
@@ -28,7 +28,8 @@ export default function StudentsPage() {
   const [form, setForm] = useState<FormState | null>(null)
   const [removing, setRemoving] = useState<Student | null>(null)
   const [viewingId, setViewingId] = useState<string | null>(null)
-  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [copiedPinId, setCopiedPinId] = useState<string | null>(null)
+  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
@@ -187,35 +188,61 @@ export default function StudentsPage() {
                     <Chip tone="primary">{className(s.classId)} sinf</Chip>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        const url = `${window.location.origin}/ota-ona?code=${s.code || s.id}`
-                        navigator.clipboard.writeText(url)
-                        setCopiedId(s.id)
-                        setTimeout(() => setCopiedId(null), 2000)
-                      }}
-                      title="Ota-ona havolasi va PIN-kodni nusxalash"
-                      className={cn(
-                        'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-mono font-semibold transition-all cursor-pointer shadow-xs',
-                        copiedId === s.id
-                          ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400'
-                          : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600 dark:border-edge dark:bg-surface-2 dark:text-gray-200 dark:hover:border-primary-500/50 dark:hover:bg-white/5 dark:hover:text-primary-400',
-                      )}
-                    >
-                      {copiedId === s.id ? (
-                        <>
+                    <div className="inline-flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          navigator.clipboard.writeText(s.code || s.id)
+                          setCopiedPinId(s.id)
+                          setTimeout(() => setCopiedPinId(null), 2000)
+                        }}
+                        title="Faqat PIN-kodni nusxalash"
+                        className={cn(
+                          'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-mono font-semibold transition-all cursor-pointer shadow-xs',
+                          copiedPinId === s.id
+                            ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400'
+                            : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600 dark:border-edge dark:bg-surface-2 dark:text-gray-200 dark:hover:border-primary-500/50 dark:hover:bg-white/5 dark:hover:text-primary-400',
+                        )}
+                      >
+                        {copiedPinId === s.id ? (
+                          <>
+                            <Check size={13} className="text-emerald-500" />
+                            <span>Kod nusxalandi! ✓</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={13} className="text-gray-400" />
+                            <span>{s.code || s.id}</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          const url = `${window.location.origin}/ota-ona?code=${s.code || s.id}`
+                          navigator.clipboard.writeText(url)
+                          setCopiedLinkId(s.id)
+                          setTimeout(() => setCopiedLinkId(null), 2000)
+                        }}
+                        title="Ota-ona uchun to‘g‘ridan-to‘g‘ri havolani (link) nusxalash"
+                        aria-label="Havolani nusxalash"
+                        className={cn(
+                          'inline-flex items-center justify-center rounded-lg border p-1 text-xs transition-all cursor-pointer shadow-xs',
+                          copiedLinkId === s.id
+                            ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400'
+                            : 'border-gray-200 bg-gray-50 text-gray-400 hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600 dark:border-edge dark:bg-surface-2 dark:text-gray-400 dark:hover:border-primary-500/50 dark:hover:bg-white/5 dark:hover:text-primary-400',
+                        )}
+                      >
+                        {copiedLinkId === s.id ? (
                           <Check size={13} className="text-emerald-500" />
-                          <span>Nusxalandi! ✓</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={13} className="text-gray-400" />
-                          <span>PIN: {s.code || s.id}</span>
-                        </>
-                      )}
-                    </button>
+                        ) : (
+                          <Link2 size={13} />
+                        )}
+                      </button>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-right font-semibold text-gray-900 tabular-nums dark:text-white">
                     {s.points}
