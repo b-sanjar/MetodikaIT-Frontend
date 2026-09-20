@@ -222,7 +222,7 @@ export default function StudentsPage() {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation()
-                          const url = `${window.location.origin}/ota-ona?code=${s.code || s.id}`
+                          const url = `${window.location.origin}/parents?code=${s.code || s.id}`
                           navigator.clipboard.writeText(url)
                           setCopiedLinkId(s.id)
                           setTimeout(() => setCopiedLinkId(null), 2000)

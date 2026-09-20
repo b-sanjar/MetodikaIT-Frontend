@@ -128,7 +128,7 @@ export default function StudentProfileModal({ student, position, classLabel, bad
               <button
                 type="button"
                 onClick={() => {
-                  const url = `${window.location.origin}/ota-ona?code=${student.code}`
+                  const url = `${window.location.origin}/parents?code=${student.code}`
                   navigator.clipboard.writeText(url)
                   setCopiedLink(true)
                   setTimeout(() => setCopiedLink(false), 2000)

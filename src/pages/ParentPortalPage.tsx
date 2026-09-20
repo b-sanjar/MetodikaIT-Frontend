@@ -171,7 +171,7 @@ export default function ParentPortalPage() {
 
   const handleCopyLink = () => {
     if (!student) return
-    const url = `${window.location.origin}/ota-ona?code=${student.code}`
+    const url = `${window.location.origin}/parents?code=${student.code}`
     navigator.clipboard.writeText(url)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -199,7 +199,7 @@ export default function ParentPortalPage() {
       {/* Top Navbar */}
       <header className="sticky top-0 z-30 border-b border-gray-200/80 bg-white/75 backdrop-blur-xl dark:border-edge dark:bg-surface/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link to="/ota-ona" className="flex items-center gap-3 group">
+          <Link to="/parents" className="flex items-center gap-3 group">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-primary-500 to-violet-600 text-white shadow-lg shadow-primary-500/40 ring-1 ring-white/20 ring-inset group-hover:scale-105 transition-transform">
               <MonitorPlay size={18} />
             </span>
@@ -240,7 +240,7 @@ export default function ParentPortalPage() {
               </button>
             ) : (
               <Link
-                to="/kirish"
+                to="/login"
                 className="flex items-center gap-1.5 rounded-lg border border-gray-200/80 bg-white/80 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-edge dark:bg-surface-2 dark:text-gray-200 dark:hover:bg-white/5"
               >
                 <LogIn size={14} />

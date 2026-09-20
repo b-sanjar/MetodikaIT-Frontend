@@ -1,31 +1,31 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
-import MainLayout from './layouts/MainLayout'
 import AuthLayout from './layouts/AuthLayout'
+import MainLayout from './layouts/MainLayout'
 import { Spinner } from './components/States'
 
-// Code splitting: lazy loaded route chunks
+// Lazy-loaded pages
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const SubjectsPage = lazy(() => import('./pages/SubjectsPage'))
 const GradesPage = lazy(() => import('./pages/GradesPage'))
 const GradeDetailPage = lazy(() => import('./pages/GradeDetailPage'))
 const LessonPage = lazy(() => import('./pages/LessonPage'))
 const PresentationPage = lazy(() => import('./pages/PresentationPage'))
 const JournalPage = lazy(() => import('./pages/JournalPage'))
-const ClassesPage = lazy(() => import('./pages/ClassesPage'))
-const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'))
+const ClassesPage = lazy(() => import('./pages/ClassesPage'))
 const StudentsPage = lazy(() => import('./pages/StudentsPage'))
 const TeachersPage = lazy(() => import('./pages/TeachersPage'))
-const SubjectsPage = lazy(() => import('./pages/SubjectsPage'))
-const ParentPortalPage = lazy(() => import('./pages/ParentPortalPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
+const ParentPortalPage = lazy(() => import('./pages/ParentPortalPage'))
 
 function SuspenseFallback() {
   return (
-    <div className="grid min-h-[50vh] place-items-center">
+    <div className="grid min-h-screen place-items-center bg-gray-50 dark:bg-surface">
       <Spinner />
     </div>
   )
@@ -39,7 +39,7 @@ function RequireAuth() {
         <Spinner />
       </div>
     )
-  if (!user) return <Navigate to="/kirish" replace />
+  if (!user) return <Navigate to="/login" replace />
   return <Outlet />
 }
 
@@ -57,6 +57,21 @@ function NoTeacher() {
   return <Outlet />
 }
 
+function RedirectLessonGrade() {
+  const { grade } = useParams()
+  return <Navigate to={`/lessons/${grade}`} replace />
+}
+
+function RedirectLesson() {
+  const { id } = useParams()
+  return <Navigate to={`/lessons/${id}`} replace />
+}
+
+function RedirectLessonPresentation() {
+  const { id } = useParams()
+  return <Navigate to={`/lessons/${id}/presentation`} replace />
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -64,35 +79,52 @@ export default function App() {
         <BrowserRouter>
           <Suspense fallback={<SuspenseFallback />}>
             <Routes>
-              <Route path="/ota-ona" element={<ParentPortalPage />} />
+              {/* Parent Portal */}
+              <Route path="/parents" element={<ParentPortalPage />} />
 
               <Route element={<RedirectIfAuthed />}>
                 <Route element={<AuthLayout />}>
-                  <Route path="/kirish" element={<LoginPage />} />
+                  <Route path="/login" element={<LoginPage />} />
                 </Route>
               </Route>
 
               <Route element={<RequireAuth />}>
                 {/* Presentation runs fullscreen, outside the main chrome */}
-                <Route path="/dars/:id/taqdimot" element={<PresentationPage />} />
+                <Route path="/lessons/:id/presentation" element={<PresentationPage />} />
 
                 <Route element={<MainLayout />}>
                   <Route path="/" element={<DashboardPage />} />
-                  <Route path="/fanlar" element={<SubjectsPage />} />
-                  <Route path="/darslar" element={<GradesPage />} />
-                  <Route path="/darslar/:grade" element={<GradeDetailPage />} />
-                  <Route path="/dars/:id" element={<LessonPage />} />
-                  <Route path="/jurnal" element={<JournalPage />} />
-                  <Route path="/reyting" element={<LeaderboardPage />} />
+                  <Route path="/subjects" element={<SubjectsPage />} />
+                  <Route path="/lessons" element={<GradesPage />} />
+                  <Route path="/lessons/:grade" element={<GradeDetailPage />} />
+                  <Route path="/lessons/:id" element={<LessonPage />} />
+                  <Route path="/journal" element={<JournalPage />} />
+                  <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route element={<NoTeacher />}>
-                    <Route path="/sinflar" element={<ClassesPage />} />
-                    <Route path="/oqituvchilar" element={<TeachersPage />} />
+                    <Route path="/classes" element={<ClassesPage />} />
+                    <Route path="/teachers" element={<TeachersPage />} />
                   </Route>
-                  <Route path="/oquvchilar" element={<StudentsPage />} />
-                  <Route path="/profil" element={<ProfilePage />} />
+                  <Route path="/students" element={<StudentsPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>
               </Route>
+
+              {/* Backward compatibility redirects for legacy / informal Uzbek URLs */}
+              <Route path="/ota-ona" element={<Navigate to="/parents" replace />} />
+              <Route path="/portal" element={<Navigate to="/parents" replace />} />
+              <Route path="/kirish" element={<Navigate to="/login" replace />} />
+              <Route path="/fanlar" element={<Navigate to="/subjects" replace />} />
+              <Route path="/darslar" element={<Navigate to="/lessons" replace />} />
+              <Route path="/darslar/:grade" element={<RedirectLessonGrade />} />
+              <Route path="/dars/:id" element={<RedirectLesson />} />
+              <Route path="/dars/:id/taqdimot" element={<RedirectLessonPresentation />} />
+              <Route path="/jurnal" element={<Navigate to="/journal" replace />} />
+              <Route path="/reyting" element={<Navigate to="/leaderboard" replace />} />
+              <Route path="/sinflar" element={<Navigate to="/classes" replace />} />
+              <Route path="/oqituvchilar" element={<Navigate to="/teachers" replace />} />
+              <Route path="/oquvchilar" element={<Navigate to="/students" replace />} />
+              <Route path="/profil" element={<Navigate to="/profile" replace />} />
             </Routes>
           </Suspense>
         </BrowserRouter>

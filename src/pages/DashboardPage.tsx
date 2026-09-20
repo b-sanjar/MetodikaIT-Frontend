@@ -72,13 +72,13 @@ export default function DashboardPage() {
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Link
-              to="/darslar"
+              to="/lessons"
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-primary-600 shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
             >
               <Presentation size={16} /> Darsni boshlash
             </Link>
             <Link
-              to="/jurnal"
+              to="/journal"
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-white/15 px-4 text-sm font-semibold text-white ring-1 ring-white/30 ring-inset backdrop-blur transition-all hover:bg-white/25"
             >
               <CalendarPlus size={16} /> Jurnalni ochish
@@ -88,19 +88,19 @@ export default function DashboardPage() {
       </div>
 
       <div className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <Link to="/fanlar">
+        <Link to="/subjects">
           <StatCard icon={Layers} label="Fanlar" value={String(data.subjects.length)} hint="O‘quv fanlari" tone="indigo" />
         </Link>
-        <Link to="/darslar">
+        <Link to="/lessons">
           <StatCard icon={BookOpen} label="Darslar" value={String(totalLessons)} hint="1–11-sinflar kesimida" tone="sky" />
         </Link>
-        <Link to="/sinflar">
+        <Link to="/classes">
           <StatCard icon={School} label="Sinflar" value={String(data.classes.length)} hint="Faol sinf guruhlari" tone="emerald" />
         </Link>
-        <Link to="/oqituvchilar">
+        <Link to="/teachers">
           <StatCard icon={GraduationCap} label="O‘qituvchilar" value={String(data.teachers.length)} hint="Fan o‘qituvchilari" tone="rose" />
         </Link>
-        <Link to="/oquvchilar">
+        <Link to="/students">
           <StatCard icon={Users} label="O‘quvchilar" value={String(data.students.length)} hint="Reytingda ishtirokda" tone="amber" />
         </Link>
       </div>
@@ -111,7 +111,7 @@ export default function DashboardPage() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-gray-900 dark:text-white">Sinflar bo‘yicha darslar</h2>
             <Link
-              to="/darslar"
+              to="/lessons"
               className="flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
             >
               Barchasi <ArrowRight size={14} />
@@ -121,7 +121,7 @@ export default function DashboardPage() {
             {data.grades.map((g) => (
               <Link
                 key={g.grade}
-                to={`/darslar/${g.grade}`}
+                to={`/lessons/${g.grade}`}
                 className="group flex flex-col items-center gap-1 rounded-xl border border-gray-100 bg-gray-50/60 p-4 transition-all hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-lg hover:shadow-primary-500/10 dark:border-edge dark:bg-surface-2 dark:hover:border-primary-500/50"
               >
                 <span className="text-xl font-semibold text-gray-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-300">
@@ -138,7 +138,7 @@ export default function DashboardPage() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-gray-900 dark:text-white">Faol o‘quvchilar</h2>
             <Link
-              to="/reyting"
+              to="/leaderboard"
               className="flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
             >
               Reyting <ArrowRight size={14} />

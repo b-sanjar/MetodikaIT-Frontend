@@ -24,17 +24,17 @@ import { cn } from '../utils/cn'
 
 const NAV = [
   { to: '/', label: 'Bosh sahifa', icon: LayoutDashboard, end: true },
-  { to: '/fanlar', label: 'Fanlar', icon: Layers },
-  { to: '/darslar', label: 'Darslar', icon: BookOpen },
-  { to: '/jurnal', label: 'Jurnal', icon: ClipboardList },
-  { to: '/reyting', label: 'Reyting', icon: Trophy },
-  { to: '/sinflar', label: 'Sinflar', icon: School },
-  { to: '/oquvchilar', label: 'O‘quvchilar', icon: Users },
-  { to: '/oqituvchilar', label: 'O‘qituvchilar', icon: GraduationCap },
+  { to: '/subjects', label: 'Fanlar', icon: Layers },
+  { to: '/lessons', label: 'Darslar', icon: BookOpen },
+  { to: '/journal', label: 'Jurnal', icon: ClipboardList },
+  { to: '/leaderboard', label: 'Reyting', icon: Trophy },
+  { to: '/classes', label: 'Sinflar', icon: School },
+  { to: '/students', label: 'O‘quvchilar', icon: Users },
+  { to: '/teachers', label: 'O‘qituvchilar', icon: GraduationCap },
 ]
 
 // Teachers work only with their lessons, journal and students
-const TEACHER_HIDDEN = ['/sinflar', '/oqituvchilar']
+const TEACHER_HIDDEN = ['/classes', '/teachers']
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrator',
@@ -96,7 +96,7 @@ export default function MainLayout() {
 
   const onLogout = () => {
     logout()
-    navigate('/kirish')
+    navigate('/login')
   }
 
   return (
@@ -140,7 +140,7 @@ export default function MainLayout() {
         <div className="border-t border-gray-200/70 px-3 pt-4 dark:border-edge">
           <div className="flex items-center gap-1">
             <Link
-              to="/profil"
+              to="/profile"
               className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-900/5 dark:hover:bg-white/5"
               title="Profil"
             >
@@ -182,7 +182,7 @@ export default function MainLayout() {
             </div>
             <div className="border-t border-gray-200/70 px-4 pt-4 dark:border-edge">
               <Link
-                to="/profil"
+                to="/profile"
                 onClick={() => setDrawer(false)}
                 className="flex items-center gap-3 rounded-lg py-1.5"
               >
@@ -230,7 +230,7 @@ export default function MainLayout() {
           >
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <Link to="/profil" aria-label="Profil" className="rounded-full transition-transform hover:scale-105">
+          <Link to="/profile" aria-label="Profil" className="rounded-full transition-transform hover:scale-105">
             <Avatar name={user?.name ?? '?'} photo={user?.photo} size="sm" />
           </Link>
           <button

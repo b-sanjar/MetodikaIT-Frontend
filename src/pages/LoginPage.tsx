@@ -86,7 +86,7 @@ export default function LoginPage() {
       </div>
 
       <Link
-        to="/ota-ona"
+        to="/parents"
         className="flex items-center justify-center gap-2 rounded-xl border border-primary-500/30 bg-primary-500/5 px-4 py-2.5 text-center text-xs font-semibold text-primary-600 transition-all hover:bg-primary-500/10 dark:border-primary-400/20 dark:bg-primary-400/10 dark:text-primary-400"
       >
         <Sparkles size={15} />

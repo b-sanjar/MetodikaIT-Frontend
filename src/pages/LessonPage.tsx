@@ -225,7 +225,7 @@ export default function LessonPage() {
     setDeleteError(null)
     try {
       await api.deleteLesson(lesson.id)
-      navigate(`/darslar/${lesson.grade}`)
+      navigate(`/lessons/${lesson.grade}`)
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : 'O‘chirishda xatolik')
       setDeleting(false)
@@ -288,7 +288,7 @@ export default function LessonPage() {
 
       <div className="print:hidden">
       <Link
-        to={`/darslar/${lesson.grade}`}
+        to={`/lessons/${lesson.grade}`}
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-300"
       >
         <ArrowLeft size={15} /> {lesson.grade}-sinf darslari
@@ -323,7 +323,7 @@ export default function LessonPage() {
             )}
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
-            <Button size="lg" onClick={() => navigate(`/dars/${lesson.id}/taqdimot`)}>
+            <Button size="lg" onClick={() => navigate(`/lessons/${lesson.id}/presentation`)}>
               <Presentation size={18} /> Taqdimotni boshlash
             </Button>
             <Button

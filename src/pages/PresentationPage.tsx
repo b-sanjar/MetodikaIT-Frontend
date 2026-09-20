@@ -87,7 +87,7 @@ export default function PresentationPage() {
 
   const exit = useCallback(() => {
     if (document.fullscreenElement) void document.exitFullscreen()
-    navigate(`/dars/${id}`)
+    navigate(`/lessons/${id}`)
   }, [navigate, id])
 
   const go = useCallback(

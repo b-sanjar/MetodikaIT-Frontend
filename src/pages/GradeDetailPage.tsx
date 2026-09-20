@@ -104,7 +104,7 @@ export default function GradeDetailPage() {
         title: newTitle.trim(),
         subjectId: resolvedSubId || null,
       })
-      navigate(`/dars/${lesson.id}`)
+      navigate(`/lessons/${lesson.id}`)
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Saqlashda xatolik')
       setSaving(false)
@@ -131,7 +131,7 @@ export default function GradeDetailPage() {
   return (
     <div className="animate-rise">
       <Link
-        to="/darslar"
+        to="/lessons"
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-300"
       >
         <ArrowLeft size={15} /> Barcha sinflar
@@ -214,7 +214,7 @@ export default function GradeDetailPage() {
             />
           )}
           {lessons.map((lesson) => (
-            <Link key={lesson.id} to={`/dars/${lesson.id}`}>
+            <Link key={lesson.id} to={`/lessons/${lesson.id}`}>
               <Card hover className="group flex items-center gap-4 p-4">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-500/10 text-sm font-semibold text-primary-600 dark:text-primary-300">
                   {lesson.order}
