@@ -16,7 +16,8 @@ import { EmptyState, ErrorState, Spinner } from '../components/States'
 import { cn } from '../utils/cn'
 
 export default function GradeDetailPage() {
-  const { grade: gradeParam } = useParams()
+  const params = useParams()
+  const gradeParam = params.grade || params.slug
   const grade = Number(gradeParam)
   const navigate = useNavigate()
   const { canTeach, isAdmin, user } = useAuth()

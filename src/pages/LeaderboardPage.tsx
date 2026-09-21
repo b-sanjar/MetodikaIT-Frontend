@@ -31,6 +31,12 @@ const REWARD_OPTIONS = [
   { points: '50', label: '+50 — loyiha g‘olibi', reason: 'Loyiha g‘olibi' },
 ]
 
+const PENALTY_OPTIONS = [
+  { points: '-5', label: '-5 — intizomsizlik / tayyorgarliksiz', reason: 'Intizomsizlik uchun' },
+  { points: '-10', label: '-10 — vazifa bajarmaslik / qoidabuzarlik', reason: 'Vazifa bajarmaganligi uchun' },
+  { points: '-20', label: '-20 — jiddiy intizom buzilishi', reason: 'Jiddiy qoidabuzarlik uchun' },
+]
+
 /** Student joined with their points sum for the selected period. */
 type RankedStudent = Student & { periodPoints: number }
 
@@ -58,6 +64,7 @@ export default function LeaderboardPage() {
   const [subjectFilter, setSubjectFilter] = useState('all')
   const [period, setPeriod] = useState<LeaderboardPeriod>('all')
   const [viewingId, setViewingId] = useState<string | null>(null)
+  const [actionType, setActionType] = useState<'reward' | 'penalty'>('reward')
   const [rewarding, setRewarding] = useState<Student | null>(null)
   const [rewardPoints, setRewardPoints] = useState('10')
   const [rewardBadge, setRewardBadge] = useState('')
@@ -120,8 +127,14 @@ export default function LeaderboardPage() {
     setSaving(true)
     setSaveError(null)
     try {
-      const reason = REWARD_OPTIONS.find((o) => o.points === rewardPoints)?.reason
-      const updated = await api.addPoints(rewarding.id, Number(rewardPoints), rewardBadge || undefined, reason)
+      const options = actionType === 'reward' ? REWARD_OPTIONS : PENALTY_OPTIONS
+      const reason = options.find((o) => o.points === rewardPoints)?.reason || (actionType === 'reward' ? 'Rag‘bat' : 'Jazo')
+      const updated = await api.addPoints(
+        rewarding.id,
+        Number(rewardPoints),
+        actionType === 'reward' ? (rewardBadge || undefined) : undefined,
+        reason,
+      )
       setData((prev) => ({
         ...prev,
         students: prev.students.map((s) => (s.id === updated.id ? updated : s)),
@@ -422,34 +435,87 @@ export default function LeaderboardPage() {
         onClose={() => setViewingId(null)}
       />
 
-      <Modal open={rewarding !== null} title={rewarding ? `Rag‘batlantirish: ${rewarding.name}` : ''} onClose={() => setRewarding(null)}>
+      <Modal
+        open={rewarding !== null}
+        title={rewarding ? `${actionType === 'reward' ? 'Rag‘batlantirish' : 'Jazo / Ball ayirish'}: ${rewarding.name}` : ''}
+        onClose={() => setRewarding(null)}
+      >
         <div className="flex flex-col gap-4">
-          <Field label="Ball qo‘shish">
+          {/* Action type switch */}
+          <div className="flex rounded-lg bg-gray-100 p-1 dark:bg-white/5">
+            <button
+              type="button"
+              onClick={() => {
+                setActionType('reward')
+                setRewardPoints('10')
+              }}
+              className={cn(
+                'flex-1 rounded-md py-1.5 text-xs font-semibold transition-all',
+                actionType === 'reward'
+                  ? 'bg-white text-emerald-600 shadow-xs dark:bg-surface dark:text-emerald-400'
+                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white',
+              )}
+            >
+              🌟 Rag‘bat (+ ball)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActionType('penalty')
+                setRewardPoints('-10')
+                setRewardBadge('')
+              }}
+              className={cn(
+                'flex-1 rounded-md py-1.5 text-xs font-semibold transition-all',
+                actionType === 'penalty'
+                  ? 'bg-white text-red-600 shadow-xs dark:bg-surface dark:text-red-400'
+                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white',
+              )}
+            >
+              ⚠️ Jazo (- ball)
+            </button>
+          </div>
+
+          <Field label={actionType === 'reward' ? 'Qo‘shiladigan ball' : 'Ayiriladigan ball'}>
             <Select value={rewardPoints} onChange={(e) => setRewardPoints(e.target.value)}>
-              {REWARD_OPTIONS.map((o) => (
+              {(actionType === 'reward' ? REWARD_OPTIONS : PENALTY_OPTIONS).map((o) => (
                 <option key={o.points} value={o.points}>
                   {o.label}
                 </option>
               ))}
             </Select>
           </Field>
-          <Field label="Nishon (ixtiyoriy)">
-            <Select value={rewardBadge} onChange={(e) => setRewardBadge(e.target.value)}>
-              <option value="">Nishonsiz</option>
-              {badgeDefs.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name} — {b.description}
-                </option>
-              ))}
-            </Select>
-          </Field>
+
+          {actionType === 'reward' && (
+            <Field label="Nishon (ixtiyoriy)">
+              <Select value={rewardBadge} onChange={(e) => setRewardBadge(e.target.value)}>
+                <option value="">Nishonsiz</option>
+                {badgeDefs.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} — {b.description}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
+
+          <p className="text-xs text-gray-400">
+            {actionType === 'reward'
+              ? 'Ballar o‘quvchining umumiy va davriy reytingiga qo‘shiladi.'
+              : 'Jazo bali o‘quvchining umumiy va davriy reytingidan chegiriladi.'}
+          </p>
+
           {saveError && <p className="text-sm text-red-500">{saveError}</p>}
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setRewarding(null)}>
               Bekor qilish
             </Button>
-            <Button onClick={giveReward} disabled={saving}>
-              {saving ? 'Saqlanmoqda...' : 'Tasdiqlash'}
+            <Button
+              onClick={giveReward}
+              disabled={saving}
+              className={cn(actionType === 'penalty' && 'bg-red-600 hover:bg-red-700 text-white')}
+            >
+              {saving ? 'Saqlanmoqda...' : actionType === 'reward' ? 'Ball berish' : 'Ball ayirish'}
             </Button>
           </div>
         </div>

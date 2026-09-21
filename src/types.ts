@@ -50,6 +50,8 @@ export interface ClassGroup {
   tutorId: string | null
   teacherName?: string
   tutorName?: string
+  leaderId?: string | null
+  leaderName?: string
 }
 
 export interface Student {
@@ -174,6 +176,8 @@ export interface JournalEntry {
   date: string
   grade: number | null
   attendance: Attendance
+  needsWork?: boolean
+  note?: string
 }
 
 export interface BadgeDef {

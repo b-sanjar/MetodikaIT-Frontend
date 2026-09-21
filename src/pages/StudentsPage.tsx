@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { Check, Copy, Link2, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Check, Copy, Crown, Link2, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import * as api from '../services/api'
 import { useFetch } from '../hooks/useFetch'
 import { useAuth } from '../context/AuthContext'
@@ -181,7 +181,18 @@ export default function StudentsPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       <Avatar name={s.name} size="sm" />
-                      <span className="font-medium whitespace-nowrap text-gray-900 dark:text-gray-100">{s.name}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium whitespace-nowrap text-gray-900 dark:text-gray-100">{s.name}</span>
+                        {data.classes.some((k) => k.id === s.classId && k.leaderId === s.id) && (
+                          <span
+                            className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-300"
+                            title="Sinf sardori"
+                          >
+                            <Crown size={10} className="fill-amber-500 text-amber-500" />
+                            Sardor
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">

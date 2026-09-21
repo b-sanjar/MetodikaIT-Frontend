@@ -321,6 +321,13 @@ export function addJournalColumn(classId: string, date: string, lessonId: string
   })
 }
 
+export function setClassLeader(classId: string, leaderId: string | null): Promise<ClassGroup> {
+  return request<ClassGroup>(`/api/classes/${classId}/leader`, {
+    method: 'PATCH',
+    body: JSON.stringify({ leaderId }),
+  })
+}
+
 /**
  * Upserts a grade/attendance cell; the backend recalculates the student's
  * rating points and returns both the entry and the updated student.
@@ -329,7 +336,7 @@ export function setJournalCell(
   classId: string,
   studentId: string,
   date: string,
-  patch: { grade?: number | null; attendance?: Attendance },
+  patch: { grade?: number | null; attendance?: Attendance; needsWork?: boolean; note?: string },
 ): Promise<{ entry: JournalEntry; student: Student }> {
   return request<{ entry: JournalEntry; student: Student }>('/api/journal/cell', {
     method: 'PUT',

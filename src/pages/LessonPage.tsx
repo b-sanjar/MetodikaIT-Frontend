@@ -200,7 +200,8 @@ function Section({ icon, title, children }: { icon: ReactNode; title: string; ch
 }
 
 export default function LessonPage() {
-  const { id } = useParams()
+  const params = useParams()
+  const id = params.id || params.slug
   const navigate = useNavigate()
   const { canTeach, isAdmin, user } = useAuth()
   const { data: lesson, loading, error, reload, setData } = useFetch(() => api.getLesson(id!), [id])

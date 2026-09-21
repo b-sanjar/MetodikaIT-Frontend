@@ -72,6 +72,14 @@ function RedirectLessonPresentation() {
   return <Navigate to={`/lessons/${id}/presentation`} replace />
 }
 
+function LessonOrGradeRoute() {
+  const { slug } = useParams()
+  if (slug && /^\d+$/.test(slug) && Number(slug) >= 1 && Number(slug) <= 11) {
+    return <GradeDetailPage />
+  }
+  return <LessonPage />
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -96,8 +104,8 @@ export default function App() {
                   <Route path="/" element={<DashboardPage />} />
                   <Route path="/subjects" element={<SubjectsPage />} />
                   <Route path="/lessons" element={<GradesPage />} />
-                  <Route path="/lessons/:grade" element={<GradeDetailPage />} />
-                  <Route path="/lessons/:id" element={<LessonPage />} />
+                  <Route path="/lessons/:slug" element={<LessonOrGradeRoute />} />
+                  <Route path="/lesson/:id" element={<LessonPage />} />
                   <Route path="/journal" element={<JournalPage />} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route element={<NoTeacher />}>
