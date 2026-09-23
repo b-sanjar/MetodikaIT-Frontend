@@ -33,8 +33,8 @@ const NAV = [
   { to: '/teachers', label: 'O‘qituvchilar', icon: GraduationCap },
 ]
 
-// Teachers work only with their lessons, journal and students
-const TEACHER_HIDDEN = ['/classes', '/teachers']
+// Teachers work only with their lessons, journal, students and leaderboard
+const TEACHER_HIDDEN = ['/classes', '/teachers', '/subjects']
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrator',

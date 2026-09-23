@@ -102,13 +102,13 @@ export default function App() {
 
                 <Route element={<MainLayout />}>
                   <Route path="/" element={<DashboardPage />} />
-                  <Route path="/subjects" element={<SubjectsPage />} />
                   <Route path="/lessons" element={<GradesPage />} />
                   <Route path="/lessons/:slug" element={<LessonOrGradeRoute />} />
                   <Route path="/lesson/:id" element={<LessonPage />} />
                   <Route path="/journal" element={<JournalPage />} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route element={<NoTeacher />}>
+                    <Route path="/subjects" element={<SubjectsPage />} />
                     <Route path="/classes" element={<ClassesPage />} />
                     <Route path="/teachers" element={<TeachersPage />} />
                   </Route>

@@ -175,9 +175,10 @@ export default function JournalPage() {
     if (!cell || !activeClass) return
     setSaving(true)
     setSaveError(null)
+    const isAbsent = cellAttendance === 'kelmadi' || cellAttendance === 'sababli' || cellAttendance === 'sababsiz'
     try {
       const { entry } = await api.setJournalCell(activeClass.id, cell.studentId, cell.date, {
-        grade: cellAttendance !== 'kelmadi' && cellGrade ? Number(cellGrade) : null,
+        grade: !isAbsent && cellGrade ? Number(cellGrade) : null,
         attendance: cellAttendance,
         needsWork: cellNeedsWork,
         note: cellNote.trim(),
@@ -403,22 +404,26 @@ export default function JournalPage() {
                             className={cn(
                               'relative inline-flex h-8 min-w-8 items-center justify-center gap-1 rounded-lg px-1.5 text-xs font-semibold transition-all',
                               canGrade && 'cursor-pointer hover:scale-110 hover:shadow-md',
-                              entry?.attendance === 'kelmadi'
-                                ? 'bg-red-500/10 text-red-500'
-                                : entry?.grade
-                                  ? GRADE_TONES[entry.grade]
-                                  : hasIssue
-                                    ? 'border border-amber-500/40 bg-amber-500/15 font-bold text-amber-600 dark:text-amber-400'
-                                    : 'bg-gray-500/5 text-gray-400 dark:bg-white/5',
+                              entry?.attendance === 'sababli'
+                                ? 'border border-sky-500/40 bg-sky-500/15 font-bold text-sky-600 dark:text-sky-300'
+                                : entry?.attendance === 'kelmadi' || entry?.attendance === 'sababsiz'
+                                  ? 'bg-red-500/10 text-red-500 font-bold'
+                                  : entry?.grade
+                                    ? GRADE_TONES[entry.grade]
+                                    : hasIssue
+                                      ? 'border border-amber-500/40 bg-amber-500/15 font-bold text-amber-600 dark:text-amber-400'
+                                      : 'bg-gray-500/5 text-gray-400 dark:bg-white/5',
                             )}
                             title={
                               entry
-                                ? `${entry.attendance === 'kelmadi' ? 'Darsda bo‘lmagan' : entry.attendance === 'kechikdi' ? 'Kechikkan' : entry.grade ? `${entry.grade}-baho` : 'Darsda qatnashgan'}${hasIssue ? ` · ⚠️ Kamchilik: ${entry.note || 'Keyingi darsda so‘ralsin'}` : ''}`
+                                ? `${entry.attendance === 'sababli' ? `Sababli kelmagan${entry.note ? ` (${entry.note})` : ''}` : entry.attendance === 'sababsiz' || entry.attendance === 'kelmadi' ? 'Sababsiz kelmagan' : entry.attendance === 'kechikdi' ? 'Kechikkan' : entry.grade ? `${entry.grade}-baho` : 'Darsda qatnashgan'}${hasIssue ? ` · ⚠️ Kamchilik: ${entry.note || 'Keyingi darsda so‘ralsin'}` : ''}`
                                 : 'Belgilanmagan'
                             }
                           >
-                            {entry?.attendance === 'kelmadi' ? (
-                              <X size={13} />
+                            {entry?.attendance === 'sababli' ? (
+                              <span className="text-[11px] font-bold tracking-tight">Sb</span>
+                            ) : entry?.attendance === 'kelmadi' || entry?.attendance === 'sababsiz' ? (
+                              <X size={13} strokeWidth={2.5} />
                             ) : (
                               <>
                                 {entry?.grade ?? (hasIssue ? <AlertCircle size={13} className="text-amber-500" /> : '·')}
@@ -453,7 +458,10 @@ export default function JournalPage() {
               <Clock3 size={13} className="text-amber-500" /> Kechikkan
             </span>
             <span className="flex items-center gap-1.5">
-              <X size={13} className="text-red-500" /> Kelmagan
+              <span className="inline-flex h-4 items-center rounded bg-sky-500/15 px-1 text-[10px] font-bold text-sky-600 dark:text-sky-300">Sb</span> Sababli kelmagan
+            </span>
+            <span className="flex items-center gap-1.5">
+              <X size={13} className="text-red-500" /> Sababsiz kelmagan
             </span>
             <span className="flex items-center gap-1.5 font-medium text-amber-600 dark:text-amber-400">
               <AlertCircle size={13} /> Kamchilik bor / Keyingi darsda so‘ralsin
@@ -469,33 +477,206 @@ export default function JournalPage() {
         title={cell ? `${cell.studentName} · ${formatDateShort(cell.date)}` : ''}
         onClose={() => setCell(null)}
       >
-        {cell && (
-          <div className="flex flex-col gap-4">
-            <Chip tone="primary" className="self-start">
-              <BookOpen size={12} /> {cell.lessonTitle}
-            </Chip>
+        {cell && (() => {
+          const isAbsent = cellAttendance === 'kelmadi' || cellAttendance === 'sababli' || cellAttendance === 'sababsiz'
+          return (
+            <div className="flex flex-col gap-4">
+              <Chip tone="primary" className="self-start">
+                <BookOpen size={12} /> {cell.lessonTitle}
+              </Chip>
 
-            <Field label="Davomat">
-              <Select value={cellAttendance} onChange={(e) => setCellAttendance(e.target.value as Attendance)}>
-                <option value="keldi">Darsda qatnashdi</option>
-                <option value="kechikdi">Kechikdi</option>
-                <option value="kelmadi">Kelmadi</option>
-              </Select>
-            </Field>
+              {/* Davomat holati tanlash (Dropdown o'rniga to'g'ridan-to'g'ri tugmalar) */}
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-200">
+                  Davomat holati
+                </label>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {[
+                    {
+                      value: 'keldi',
+                      label: 'Keldi',
+                      desc: 'Darsda qatnashdi',
+                      icon: Check,
+                      activeClass:
+                        'border-emerald-500 bg-emerald-500/15 text-emerald-700 ring-2 ring-emerald-500/40 dark:border-emerald-400 dark:bg-emerald-500/20 dark:text-emerald-300',
+                    },
+                    {
+                      value: 'kechikdi',
+                      label: 'Kechikdi',
+                      desc: 'Kechikib keldi',
+                      icon: Clock3,
+                      activeClass:
+                        'border-amber-500 bg-amber-500/15 text-amber-700 ring-2 ring-amber-500/40 dark:border-amber-400 dark:bg-amber-500/20 dark:text-amber-300',
+                    },
+                    {
+                      value: 'sababli',
+                      label: 'Sababli',
+                      desc: 'Kelmadi (sababli)',
+                      icon: UserCheck,
+                      activeClass:
+                        'border-sky-500 bg-sky-500/15 text-sky-700 ring-2 ring-sky-500/40 dark:border-sky-400 dark:bg-sky-500/20 dark:text-sky-300',
+                    },
+                    {
+                      value: 'sababsiz',
+                      label: 'Sababsiz',
+                      desc: 'Kelmadi (sababsiz)',
+                      icon: X,
+                      activeClass:
+                        'border-red-500 bg-red-500/15 text-red-700 ring-2 ring-red-500/40 dark:border-red-400 dark:bg-red-500/20 dark:text-red-300',
+                    },
+                  ].map((item) => {
+                    const Icon = item.icon
+                    const isSelected =
+                      cellAttendance === item.value ||
+                      (item.value === 'sababsiz' && cellAttendance === 'kelmadi')
+                    return (
+                      <button
+                        key={item.value}
+                        type="button"
+                        onClick={() => {
+                          const newAtt = item.value as Attendance
+                          setCellAttendance(newAtt)
+                          if (newAtt === 'sababli' || newAtt === 'sababsiz' || newAtt === 'kelmadi') {
+                            setCellGrade('')
+                          }
+                        }}
+                        className={cn(
+                          'flex flex-col items-center justify-center rounded-xl border p-2.5 text-center transition-all cursor-pointer',
+                          isSelected
+                            ? item.activeClass
+                            : 'border-gray-200 bg-white/60 text-gray-600 hover:border-gray-300 hover:bg-gray-50/80 dark:border-edge dark:bg-surface-2 dark:text-gray-400 dark:hover:border-gray-600',
+                        )}
+                      >
+                        <Icon size={18} className="mb-1" />
+                        <span className="text-xs font-bold leading-tight">{item.label}</span>
+                        <span className="text-[10px] opacity-75">{item.desc}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
 
-            <Field label="Baho">
-              <Select
-                value={cellGrade}
-                onChange={(e) => setCellGrade(e.target.value)}
-                disabled={cellAttendance === 'kelmadi'}
-              >
-                <option value="">Baho qo‘yilmagan</option>
-                <option value="5">5 — a’lo (+15 ball)</option>
-                <option value="4">4 — yaxshi (+10 ball)</option>
-                <option value="3">3 — qoniqarli (+5 ball)</option>
-                <option value="2">2 — qoniqarsiz (-10 ball jazo)</option>
-              </Select>
-            </Field>
+              {/* Sababli kelmagan bo'lsa sababini kiritish */}
+              {cellAttendance === 'sababli' && (
+                <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-3 dark:bg-sky-500/10">
+                  <label className="block text-xs font-semibold text-sky-800 dark:text-sky-200 mb-1.5">
+                    Sababini belgilash / izoh
+                  </label>
+                  <Input
+                    value={cellNote}
+                    onChange={(e) => setCellNote(e.target.value)}
+                    placeholder="Masalan: Kasallik tufayli, Shifokor ma'lumotnomasi, Musobaqada..."
+                  />
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {['Kasallik / Shifokor', 'Oila sababli', 'Musobaqa / Tadbir', 'Ariza asosida'].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setCellNote(preset)}
+                        className="rounded-md border border-sky-200 bg-white/90 px-2 py-0.5 text-xs text-sky-700 transition-colors hover:bg-sky-100 dark:border-sky-800 dark:bg-surface dark:text-sky-300"
+                      >
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Baho qo'yish (Dropdownda emas, bevosita katta qulay tugmalar) */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                    Darsdagi bahosi
+                  </label>
+                  {cellGrade && !isAbsent && (
+                    <button
+                      type="button"
+                      onClick={() => setCellGrade('')}
+                      className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      Bahoni tozalash ✕
+                    </button>
+                  )}
+                </div>
+
+                {isAbsent ? (
+                  <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/50 p-3.5 text-center text-xs text-gray-500 dark:border-edge dark:bg-surface-2 dark:text-gray-400">
+                    ⚠️ O‘quvchi darsga kelmagan deb belgilanganda baho qo‘yilmaydi.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      {
+                        val: '5',
+                        title: 'A’lo',
+                        pts: '+15 ball',
+                        tone: 'border-emerald-500 text-emerald-600 dark:text-emerald-300',
+                        bg: 'bg-emerald-500/10 hover:bg-emerald-500/20',
+                        active: 'bg-emerald-500 text-white ring-2 ring-emerald-500/50 shadow-md shadow-emerald-500/30',
+                      },
+                      {
+                        val: '4',
+                        title: 'Yaxshi',
+                        pts: '+10 ball',
+                        tone: 'border-primary-500 text-primary-600 dark:text-primary-300',
+                        bg: 'bg-primary-500/10 hover:bg-primary-500/20',
+                        active: 'bg-primary-500 text-white ring-2 ring-primary-500/50 shadow-md shadow-primary-500/30',
+                      },
+                      {
+                        val: '3',
+                        title: 'Qoniqarli',
+                        pts: '+5 ball',
+                        tone: 'border-amber-500 text-amber-600 dark:text-amber-300',
+                        bg: 'bg-amber-500/10 hover:bg-amber-500/20',
+                        active: 'bg-amber-500 text-white ring-2 ring-amber-500/50 shadow-md shadow-amber-500/30',
+                      },
+                      {
+                        val: '2',
+                        title: 'Qoniqarsiz',
+                        pts: '-10 ball',
+                        tone: 'border-red-500 text-red-600 dark:text-red-300',
+                        bg: 'bg-red-500/10 hover:bg-red-500/20',
+                        active: 'bg-red-500 text-white ring-2 ring-red-500/50 shadow-md shadow-red-500/30',
+                      },
+                    ].map((gradeBtn) => {
+                      const isSelected = cellGrade === gradeBtn.val
+                      return (
+                        <button
+                          key={gradeBtn.val}
+                          type="button"
+                          onClick={() => setCellGrade(isSelected ? '' : gradeBtn.val)}
+                          className={cn(
+                            'relative flex flex-col items-center justify-center rounded-xl border p-3 transition-all cursor-pointer select-none',
+                            isSelected
+                              ? gradeBtn.active
+                              : cn('border-gray-200 dark:border-edge bg-white/70 dark:bg-surface-2', gradeBtn.bg),
+                          )}
+                        >
+                          <span className={cn('text-2xl font-black leading-none', !isSelected && gradeBtn.tone)}>
+                            {gradeBtn.val}
+                          </span>
+                          <span className={cn('mt-1 text-xs font-semibold', isSelected ? 'text-white' : 'text-gray-700 dark:text-gray-200')}>
+                            {gradeBtn.title}
+                          </span>
+                          <span
+                            className={cn(
+                              'text-[10px] font-medium',
+                              isSelected ? 'text-white/80' : 'text-gray-400 dark:text-gray-500',
+                            )}
+                          >
+                            {gradeBtn.pts}
+                          </span>
+                          {isSelected && (
+                            <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-gray-900 shadow text-[10px] font-bold">
+                              ✓
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
 
             {/* Kamchilik bor / Keyingi darsda so'ralsin (balsiz belgilab qo'yish) */}
             <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-3.5 dark:bg-amber-500/10">
@@ -552,7 +733,8 @@ export default function JournalPage() {
               </Button>
             </div>
           </div>
-        )}
+          )
+        })()}
       </Modal>
 
       {/* Set class leader modal */}

@@ -159,7 +159,7 @@ export interface QuarterInfo {
   skills: string[]
 }
 
-export type Attendance = 'keldi' | 'kelmadi' | 'kechikdi'
+export type Attendance = 'keldi' | 'kelmadi' | 'kechikdi' | 'sababli' | 'sababsiz'
 
 /** One conducted lesson in a class journal: a date bound to the taught topic. */
 export interface JournalColumn {

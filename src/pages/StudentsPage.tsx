@@ -147,13 +147,34 @@ export default function StudentsPage() {
             className="pl-9"
           />
         </div>
-        <Select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="sm:w-44">
+        <Select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="sm:w-48">
           <option value="all">Barcha sinflar</option>
-          {data.classes.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.grade}-«{c.letter}» sinf
-            </option>
-          ))}
+          {user?.role === 'teacher' && manageableClasses.length > 0 ? (
+            <>
+              <optgroup label="Mening sinflarim">
+                {manageableClasses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.grade}-«{c.letter}» sinf
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Boshqa sinflar">
+                {data.classes
+                  .filter((c) => !manageableClasses.some((m) => m.id === c.id))
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.grade}-«{c.letter}» sinf
+                    </option>
+                  ))}
+              </optgroup>
+            </>
+          ) : (
+            data.classes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.grade}-«{c.letter}» sinf
+              </option>
+            ))
+          )}
         </Select>
       </div>
 

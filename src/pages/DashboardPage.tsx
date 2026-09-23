@@ -3,6 +3,7 @@ import {
   ArrowRight,
   BookOpen,
   CalendarPlus,
+  ClipboardList,
   GraduationCap,
   Layers,
   Presentation,
@@ -87,23 +88,40 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <Link to="/subjects">
-          <StatCard icon={Layers} label="Fanlar" value={String(data.subjects.length)} hint="O‘quv fanlari" tone="indigo" />
-        </Link>
-        <Link to="/lessons">
-          <StatCard icon={BookOpen} label="Darslar" value={String(totalLessons)} hint="1–11-sinflar kesimida" tone="sky" />
-        </Link>
-        <Link to="/classes">
-          <StatCard icon={School} label="Sinflar" value={String(data.classes.length)} hint="Faol sinf guruhlari" tone="emerald" />
-        </Link>
-        <Link to="/teachers">
-          <StatCard icon={GraduationCap} label="O‘qituvchilar" value={String(data.teachers.length)} hint="Fan o‘qituvchilari" tone="rose" />
-        </Link>
-        <Link to="/students">
-          <StatCard icon={Users} label="O‘quvchilar" value={String(data.students.length)} hint="Reytingda ishtirokda" tone="amber" />
-        </Link>
-      </div>
+      {user?.role === 'teacher' ? (
+        <div className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Link to="/lessons">
+            <StatCard icon={BookOpen} label="Darslar" value={String(totalLessons)} hint="Sinf mavzulari va taqdimot" tone="sky" />
+          </Link>
+          <Link to="/journal">
+            <StatCard icon={ClipboardList} label="Elektron jurnal" value={String(data.classes.length)} hint="Davomat va baholash" tone="emerald" />
+          </Link>
+          <Link to="/students">
+            <StatCard icon={Users} label="O‘quvchilar" value={String(data.students.length)} hint="Sinf o‘quvchilari" tone="amber" />
+          </Link>
+          <Link to="/leaderboard">
+            <StatCard icon={Trophy} label="Reyting" value="Top 10" hint="Eng yuqori ballar" tone="indigo" />
+          </Link>
+        </div>
+      ) : (
+        <div className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <Link to="/subjects">
+            <StatCard icon={Layers} label="Fanlar" value={String(data.subjects.length)} hint="O‘quv fanlari" tone="indigo" />
+          </Link>
+          <Link to="/lessons">
+            <StatCard icon={BookOpen} label="Darslar" value={String(totalLessons)} hint="1–11-sinflar kesimida" tone="sky" />
+          </Link>
+          <Link to="/classes">
+            <StatCard icon={School} label="Sinflar" value={String(data.classes.length)} hint="Faol sinf guruhlari" tone="emerald" />
+          </Link>
+          <Link to="/teachers">
+            <StatCard icon={GraduationCap} label="O‘qituvchilar" value={String(data.teachers.length)} hint="Fan o‘qituvchilari" tone="rose" />
+          </Link>
+          <Link to="/students">
+            <StatCard icon={Users} label="O‘quvchilar" value={String(data.students.length)} hint="Reytingda ishtirokda" tone="amber" />
+          </Link>
+        </div>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Grades quick access */}

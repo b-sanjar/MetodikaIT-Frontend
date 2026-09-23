@@ -59,7 +59,7 @@ export const RANKS: Rank[] = [
   {
     id: 'bronza',
     name: 'Bronza',
-    min: 40,
+    min: 120,
     icon: Shield,
     text: 'text-orange-500',
     chip: 'bg-orange-500/10 text-orange-600 ring-orange-500/30 dark:bg-orange-500/15 dark:text-orange-300 dark:ring-orange-400/25',
@@ -70,7 +70,7 @@ export const RANKS: Rank[] = [
   {
     id: 'kumush',
     name: 'Kumush',
-    min: 100,
+    min: 300,
     icon: Medal,
     text: 'text-slate-400',
     chip: 'bg-slate-500/10 text-slate-500 ring-slate-500/25 dark:bg-slate-400/10 dark:text-slate-300 dark:ring-slate-400/25',
@@ -81,7 +81,7 @@ export const RANKS: Rank[] = [
   {
     id: 'oltin',
     name: 'Oltin',
-    min: 200,
+    min: 600,
     icon: Trophy,
     text: 'text-amber-500',
     chip: 'bg-amber-500/10 text-amber-600 ring-amber-500/30 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-400/25',
@@ -92,7 +92,7 @@ export const RANKS: Rank[] = [
   {
     id: 'platina',
     name: 'Platina',
-    min: 350,
+    min: 1050,
     icon: Gem,
     text: 'text-cyan-500',
     chip: 'bg-cyan-500/10 text-cyan-600 ring-cyan-500/30 dark:bg-cyan-500/15 dark:text-cyan-300 dark:ring-cyan-400/25',
@@ -103,7 +103,7 @@ export const RANKS: Rank[] = [
   {
     id: 'olmos',
     name: 'Olmos',
-    min: 550,
+    min: 1650,
     icon: Diamond,
     text: 'text-violet-500',
     chip: 'bg-violet-500/10 text-violet-600 ring-violet-500/30 dark:bg-violet-500/15 dark:text-violet-300 dark:ring-violet-400/25',
@@ -114,7 +114,7 @@ export const RANKS: Rank[] = [
   {
     id: 'afsona',
     name: 'Afsona',
-    min: 800,
+    min: 2400,
     icon: Crown,
     text: 'text-fuchsia-500',
     chip: 'bg-fuchsia-500/10 text-fuchsia-600 ring-fuchsia-500/30 dark:bg-fuchsia-500/15 dark:text-fuchsia-300 dark:ring-fuchsia-400/25',
@@ -151,7 +151,7 @@ export function rankProgress(points: number): RankProgress {
 }
 
 export function starsFor(points: number): number {
-  return Math.min(5, Math.floor(points / 60) + 1)
+  return Math.min(5, Math.floor(points / 180) + 1)
 }
 
 // ---------- Journal stats ----------
@@ -163,9 +163,11 @@ export interface StudentStats {
   attended: number
   late: number
   missed: number
+  excused: number
+  unexcused: number
   /** 0–100, present (keldi + kechikdi) share of all recorded lessons. */
   attendancePct: number
-  /** Longest run of lessons without a "kelmadi". */
+  /** Longest run of lessons without absence. */
   bestStreak: number
 }
 
@@ -176,13 +178,20 @@ export function computeStats(entries: JournalEntry[]): StudentStats {
   let attended = 0
   let late = 0
   let missed = 0
+  let excused = 0
+  let unexcused = 0
   let best = 0
   let run = 0
   for (const e of sorted) {
     if (e.grade === 5) grade5++
     if (e.grade === 4) grade4++
-    if (e.attendance === 'kelmadi') {
+    if (e.attendance === 'sababli') {
       missed++
+      excused++
+      run = 0
+    } else if (e.attendance === 'kelmadi' || e.attendance === 'sababsiz') {
+      missed++
+      unexcused++
       run = 0
     } else {
       if (e.attendance === 'kechikdi') late++
@@ -200,6 +209,8 @@ export function computeStats(entries: JournalEntry[]): StudentStats {
     attended,
     late,
     missed,
+    excused,
+    unexcused,
     attendancePct: total ? Math.round((present / total) * 100) : 0,
     bestStreak: best,
   }
@@ -229,91 +240,91 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: 'first-step',
     name: 'Ilk qadam',
-    description: 'Birinchi darsda qatnashish',
+    description: 'Kamida 3 ta darsda qatnashish',
     icon: Footprints,
     tone: 'border-emerald-400/40 bg-emerald-500/10 text-emerald-500 dark:text-emerald-300',
-    target: 1,
+    target: 3,
     value: ({ stats }) => stats.totalLessons,
   },
   {
     id: 'five-stars',
     name: 'A‘lochi',
-    description: '5 ta «5» baho olish',
+    description: '15 ta «5» baho olish',
     icon: Star,
     tone: 'border-amber-400/40 bg-amber-500/10 text-amber-500 dark:text-amber-300',
-    target: 5,
+    target: 15,
     value: ({ stats }) => stats.grade5,
   },
   {
     id: 'scholar',
     name: 'Bilim sohibi',
-    description: '15 ta «5» baho olish',
+    description: '45 ta «5» baho olish',
     icon: GraduationCap,
     tone: 'border-indigo-400/40 bg-indigo-500/10 text-indigo-500 dark:text-indigo-300',
-    target: 15,
+    target: 45,
     value: ({ stats }) => stats.grade5,
   },
   {
     id: 'streak-5',
     name: 'Olovli seriya',
-    description: '5 dars ketma-ket qatnashish',
+    description: '15 dars ketma-ket qatnashish',
     icon: Flame,
     tone: 'border-orange-400/40 bg-orange-500/10 text-orange-500 dark:text-orange-300',
-    target: 5,
+    target: 15,
     value: ({ stats }) => stats.bestStreak,
   },
   {
     id: 'streak-10',
     name: 'To‘xtatib bo‘lmas',
-    description: '10 dars ketma-ket qatnashish',
+    description: '30 dars ketma-ket qatnashish',
     icon: Zap,
     tone: 'border-yellow-400/40 bg-yellow-500/10 text-yellow-500 dark:text-yellow-300',
-    target: 10,
+    target: 30,
     value: ({ stats }) => stats.bestStreak,
   },
   {
     id: 'attendance-90',
     name: 'Davomat qahramoni',
-    description: 'Kamida 5 darsda 90% davomat',
+    description: 'Kamida 15 darsda 90% davomat',
     icon: CalendarCheck,
     tone: 'border-teal-400/40 bg-teal-500/10 text-teal-500 dark:text-teal-300',
     target: 90,
-    value: ({ stats }) => (stats.totalLessons >= 5 ? stats.attendancePct : 0),
+    value: ({ stats }) => (stats.totalLessons >= 15 ? stats.attendancePct : 0),
   },
   {
     id: 'points-100',
-    name: 'Yuzlik klubi',
-    description: '100 ball to‘plash',
+    name: '300 lik klubi',
+    description: '300 ball to‘plash',
     icon: Coins,
     tone: 'border-lime-400/40 bg-lime-500/10 text-lime-600 dark:text-lime-300',
-    target: 100,
+    target: 300,
     value: ({ student }) => student.points,
   },
   {
     id: 'points-300',
     name: 'Ball ovchisi',
-    description: '300 ball to‘plash',
+    description: '900 ball to‘plash',
     icon: Target,
     tone: 'border-sky-400/40 bg-sky-500/10 text-sky-500 dark:text-sky-300',
-    target: 300,
+    target: 900,
     value: ({ student }) => student.points,
   },
   {
     id: 'points-600',
     name: 'Chempion',
-    description: '600 ball to‘plash',
+    description: '1800 ball to‘plash',
     icon: Trophy,
     tone: 'border-amber-400/40 bg-amber-500/10 text-amber-500 dark:text-amber-300',
-    target: 600,
+    target: 1800,
     value: ({ student }) => student.points,
   },
   {
     id: 'collector',
     name: 'Kolleksioner',
-    description: '3 xil nishon yig‘ish',
+    description: 'Barcha 5 xil nishonni yig‘ish',
     icon: Award,
     tone: 'border-rose-400/40 bg-rose-500/10 text-rose-500 dark:text-rose-300',
-    target: 3,
+    target: 5,
     value: ({ student }) => student.badges.length,
   },
   {

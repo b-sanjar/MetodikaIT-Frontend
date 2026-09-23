@@ -210,7 +210,13 @@ export default function StudentProfileModal({ student, position, classLabel, bad
               {[
                 { icon: BookOpen, label: 'Darslar', value: String(stats.totalLessons), tone: 'text-primary-500 bg-primary-500/10' },
                 { icon: Star, label: '«5» baholar', value: String(stats.grade5), tone: 'text-amber-500 bg-amber-500/10' },
-                { icon: CalendarCheck, label: 'Davomat', value: `${stats.attendancePct}%`, tone: 'text-emerald-500 bg-emerald-500/10' },
+                {
+                  icon: CalendarCheck,
+                  label: 'Davomat',
+                  value: `${stats.attendancePct}%`,
+                  tone: 'text-emerald-500 bg-emerald-500/10',
+                  hint: stats.missed > 0 ? `${stats.excused} sb / ${stats.unexcused} sbs` : undefined,
+                },
                 { icon: Flame, label: 'Eng uzun seriya', value: String(stats.bestStreak), tone: 'text-orange-500 bg-orange-500/10' },
               ].map((s) => (
                 <div
@@ -222,6 +228,7 @@ export default function StudentProfileModal({ student, position, classLabel, bad
                   </span>
                   <p className="font-display text-lg font-semibold text-gray-900 tabular-nums dark:text-white">{s.value}</p>
                   <p className="text-[11px] text-gray-400">{s.label}</p>
+                  {s.hint && <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{s.hint}</p>}
                 </div>
               ))}
             </div>
