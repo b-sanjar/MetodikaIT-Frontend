@@ -208,13 +208,28 @@ export default function JournalPage() {
     setSaving(true)
     setSaveError(null)
     try {
-      const column = await api.addJournalColumn(activeClass.id, colDate, colLesson)
-      setData((prev) =>
-        prev === null
-          ? prev
-          : { ...prev, columns: [...prev.columns, column].sort((a, b) => a.date.localeCompare(b.date)) },
-      )
+      const res = (await api.addJournalColumn(activeClass.id, colDate, colLesson)) as any
+      const column = {
+        id: res.id,
+        classId: res.classId,
+        date: res.date,
+        lessonId: res.lessonId,
+      }
+      const newEntries: JournalEntry[] = res.entries || []
+      setData((prev) => {
+        if (!prev) return prev
+        const existingEntryIds = new Set(newEntries.map((e) => e.id))
+        const filteredJournal = prev.journal.filter((j) => !existingEntryIds.has(j.id))
+        return {
+          ...prev,
+          columns: [...prev.columns.filter((c) => c.id !== column.id), column].sort((a, b) =>
+            a.date.localeCompare(b.date),
+          ),
+          journal: [...filteredJournal, ...newEntries],
+        }
+      })
       setColModal(false)
+      reload()
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Saqlashda xatolik')
     } finally {
@@ -412,11 +427,13 @@ export default function JournalPage() {
                                     ? GRADE_TONES[entry.grade]
                                     : hasIssue
                                       ? 'border border-amber-500/40 bg-amber-500/15 font-bold text-amber-600 dark:text-amber-400'
-                                      : 'bg-gray-500/5 text-gray-400 dark:bg-white/5',
+                                      : entry?.attendance === 'keldi'
+                                        ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold'
+                                        : 'bg-gray-500/5 text-gray-400 dark:bg-white/5',
                             )}
                             title={
                               entry
-                                ? `${entry.attendance === 'sababli' ? `Sababli kelmagan${entry.note ? ` (${entry.note})` : ''}` : entry.attendance === 'sababsiz' || entry.attendance === 'kelmadi' ? 'Sababsiz kelmagan' : entry.attendance === 'kechikdi' ? 'Kechikkan' : entry.grade ? `${entry.grade}-baho` : 'Darsda qatnashgan'}${hasIssue ? ` · ⚠️ Kamchilik: ${entry.note || 'Keyingi darsda so‘ralsin'}` : ''}`
+                                ? `${entry.attendance === 'sababli' ? `Sababli kelmagan${entry.note ? ` (${entry.note})` : ''}` : entry.attendance === 'sababsiz' || entry.attendance === 'kelmadi' ? 'Sababsiz kelmagan' : entry.grade ? `${entry.grade}-baho` : entry.attendance === 'kechikdi' ? 'Kechikkan (+1 ball)' : 'Darsda qatnashgan (+2 ball)'}${hasIssue ? ` · ⚠️ Kamchilik: ${entry.note || 'Keyingi darsda so‘ralsin'}` : ''}`
                                 : 'Belgilanmagan'
                             }
                           >
@@ -426,7 +443,7 @@ export default function JournalPage() {
                               <X size={13} strokeWidth={2.5} />
                             ) : (
                               <>
-                                {entry?.grade ?? (hasIssue ? <AlertCircle size={13} className="text-amber-500" /> : '·')}
+                                {entry?.grade ?? (hasIssue ? <AlertCircle size={13} className="text-amber-500" /> : entry?.attendance === 'keldi' ? <Check size={13} className="text-emerald-500" /> : '·')}
                                 {entry?.attendance === 'kechikdi' && <Clock3 size={11} className="opacity-70" />}
                               </>
                             )}
@@ -452,10 +469,19 @@ export default function JournalPage() {
           </table>
           <div className="flex flex-wrap items-center gap-4 border-t border-gray-100 px-4 py-3 text-xs text-gray-400 dark:border-edge">
             <span className="flex items-center gap-1.5">
-              <Check size={13} className="text-emerald-500" /> Baho — darsda qatnashgan
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-500 font-bold">
+                <Check size={12} />
+              </span>
+              Qatnashgan (+2 ball)
             </span>
             <span className="flex items-center gap-1.5">
-              <Clock3 size={13} className="text-amber-500" /> Kechikkan
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-emerald-500/15 text-xs font-bold text-emerald-600 dark:text-emerald-300">
+                5
+              </span>
+              Baho (5, 4, 3, 2)
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock3 size={13} className="text-amber-500" /> Kechikkan (+1 ball)
             </span>
             <span className="flex items-center gap-1.5">
               <span className="inline-flex h-4 items-center rounded bg-sky-500/15 px-1 text-[10px] font-bold text-sky-600 dark:text-sky-300">Sb</span> Sababli kelmagan
