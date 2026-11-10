@@ -24,7 +24,8 @@ import type {
   Teacher,
 } from '../types'
 
-const BASE_URL: string = import.meta.env.VITE_API_URL ?? 'https://metodikait-backend.onrender.com'
+const rawApiUrl = (import.meta.env.VITE_API_URL || '').trim()
+const BASE_URL: string = (rawApiUrl || 'https://metodikait-backend.onrender.com').replace(/\/+$/, '')
 const TOKEN_KEY = 'mit:token'
 const PARENT_TOKEN_KEY = 'mit:parent_token'
 const PARENT_CODE_KEY = 'mit:parent_code'
