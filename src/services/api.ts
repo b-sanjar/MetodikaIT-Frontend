@@ -12,6 +12,7 @@ import type {
   LeaderboardEntry,
   LeaderboardPeriod,
   Lesson,
+  LessonType,
   PointsEvent,
   PublicLeaderboardEntry,
   PublicMeta,
@@ -34,7 +35,55 @@ export function hasToken(): boolean {
 
 const inFlightGets = new Map<string, Promise<any>>()
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+// Cold start listener callbacks
+type ServerStatusListener = (waking: boolean) => void
+const statusListeners = new Set<ServerStatusListener>()
+let isServerWakingState = false
+
+export function subscribeServerStatus(listener: ServerStatusListener): () => void {
+  statusListeners.add(listener)
+  listener(isServerWakingState)
+  return () => statusListeners.delete(listener)
+}
+
+function notifyServerStatus(waking: boolean) {
+  if (isServerWakingState !== waking) {
+    isServerWakingState = waking
+    statusListeners.forEach((fn) => {
+      try {
+        fn(waking)
+      } catch {}
+    })
+  }
+}
+
+// Background keep-alive to prevent Render free-tier sleep while tab is open
+let keepAliveTimer: any = null
+export function startKeepAlive(): void {
+  if (keepAliveTimer) return
+  // Ping /api/health every 4 minutes (Render sleeps after 15 min idle)
+  keepAliveTimer = setInterval(() => {
+    if (document.visibilityState === 'visible') {
+      fetch(`${BASE_URL}/api/health`).catch(() => {})
+    }
+  }, 4 * 60 * 1000)
+}
+// Start keep-alive immediately
+startKeepAlive()
+
+// Warm up backend immediately on app init
+export function warmupServer(): void {
+  fetch(`${BASE_URL}/api/health`)
+    .then((res) => {
+      if (res.ok) notifyServerStatus(false)
+    })
+    .catch(() => {
+      notifyServerStatus(true)
+    })
+}
+warmupServer()
+
+async function request<T>(path: string, options: RequestInit = {}, retries = 2): Promise<T> {
   const isGet = !options.method || options.method.toUpperCase() === 'GET'
   if (isGet && inFlightGets.has(path)) {
     return inFlightGets.get(path) as Promise<T>
@@ -46,29 +95,55 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const activeToken = userToken || parentToken
 
   const reqPromise = (async () => {
-    let res: Response
-    try {
-      res = await fetch(BASE_URL + path, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
-          ...(parentCode ? { 'X-Parent-Code': parentCode } : {}),
-          ...options.headers,
-        },
-      })
-    } catch {
-      throw new Error('Server bilan aloqa yo‘q — internetni tekshiring')
+    let lastError: any = null
+    const maxAttempts = isGet ? retries + 1 : 1
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const res = await fetch(BASE_URL + path, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+            ...(parentCode ? { 'X-Parent-Code': parentCode } : {}),
+            ...options.headers,
+          },
+        })
+
+        // Server responded successfully — not cold-starting
+        notifyServerStatus(false)
+
+        // Expired/invalid token — drop it
+        if (res.status === 401) {
+          if (userToken) localStorage.removeItem(TOKEN_KEY)
+          if (parentToken) localStorage.removeItem(PARENT_TOKEN_KEY)
+        }
+        if (res.status === 204) return null as T
+        const data = await res.json().catch(() => null)
+        if (!res.ok) {
+          // If server returned 502/503/504, Render is booting up
+          if ([502, 503, 504].includes(res.status) && attempt < maxAttempts - 1) {
+            notifyServerStatus(true)
+            await new Promise((r) => setTimeout(r, 2000))
+            continue
+          }
+          throw new Error(data?.detail ?? 'Xatolik yuz berdi')
+        }
+        return data as T
+      } catch (err: any) {
+        lastError = err
+        if (attempt < maxAttempts - 1) {
+          notifyServerStatus(true)
+          await new Promise((r) => setTimeout(r, 2000))
+        }
+      }
     }
-    // Expired/invalid token — drop it
-    if (res.status === 401) {
-      if (userToken) localStorage.removeItem(TOKEN_KEY)
-      if (parentToken) localStorage.removeItem(PARENT_TOKEN_KEY)
+
+    notifyServerStatus(false)
+    if (lastError?.message && lastError.message !== 'Failed to fetch') {
+      throw lastError
     }
-    if (res.status === 204) return null as T
-    const data = await res.json().catch(() => null)
-    if (!res.ok) throw new Error(data?.detail ?? 'Xatolik yuz berdi')
-    return data as T
+    throw new Error('Server bilan aloqa yo‘q — internetni yoki bepul server uyg‘onishini tekshiring')
   })()
 
   if (isGet) {
@@ -149,6 +224,7 @@ export interface NewLessonInput {
   title: string
   durationMin?: number
   subjectId?: string | null
+  lessonType?: LessonType
 }
 
 /** The backend fills the lesson body from a template and sets the author from the token. */
@@ -170,11 +246,24 @@ export function getQuarterInfos(grade: number): Promise<QuarterInfo[]> {
 
 // ---------- People & classes ----------
 
-export function getClasses(): Promise<ClassGroup[]> {
-  return request<ClassGroup[]>('/api/classes')
+let cachedClasses: { data: ClassGroup[]; time: number } | null = null
+
+export function clearClassCache() {
+  cachedClasses = null
+}
+
+export async function getClasses(): Promise<ClassGroup[]> {
+  const now = Date.now()
+  if (cachedClasses && now - cachedClasses.time < 60_000) {
+    return cachedClasses.data
+  }
+  const classes = await request<ClassGroup[]>('/api/classes')
+  cachedClasses = { data: classes, time: now }
+  return classes
 }
 
 export function saveClass(data: Omit<ClassGroup, 'id'> & { id?: string }): Promise<ClassGroup> {
+  clearClassCache()
   const body = JSON.stringify({
     grade: data.grade,
     letter: data.letter,
@@ -187,6 +276,7 @@ export function saveClass(data: Omit<ClassGroup, 'id'> & { id?: string }): Promi
 }
 
 export function deleteClass(id: string): Promise<void> {
+  clearClassCache()
   return request<void>(`/api/classes/${id}`, { method: 'DELETE' })
 }
 
@@ -314,14 +404,37 @@ export function getJournalColumns(classId: string): Promise<JournalColumn[]> {
   return request<JournalColumn[]>(`/api/journal/columns?classId=${classId}`)
 }
 
-export function addJournalColumn(classId: string, date: string, lessonId: string): Promise<JournalColumn> {
+export function addJournalColumn(
+  classId: string,
+  date: string,
+  lessonId: string,
+  quarter?: number,
+  lessonType?: string,
+): Promise<JournalColumn> {
   return request<JournalColumn>('/api/journal/columns', {
     method: 'POST',
-    body: JSON.stringify({ classId, date, lessonId }),
+    body: JSON.stringify({ classId, date, lessonId, quarter, lessonType }),
+  })
+}
+
+export function deleteJournalColumn(columnId: string): Promise<{ message: string; id: string }> {
+  return request<{ message: string; id: string }>(`/api/journal/columns/${columnId}`, {
+    method: 'DELETE',
+  })
+}
+
+export function updateJournalColumn(
+  columnId: string,
+  patch: { lessonId?: string; date?: string; quarter?: number; lessonType?: string },
+): Promise<JournalColumn> {
+  return request<JournalColumn>(`/api/journal/columns/${columnId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
   })
 }
 
 export function setClassLeader(classId: string, leaderId: string | null): Promise<ClassGroup> {
+  clearClassCache()
   return request<ClassGroup>(`/api/classes/${classId}/leader`, {
     method: 'PATCH',
     body: JSON.stringify({ leaderId }),

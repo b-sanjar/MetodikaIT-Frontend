@@ -130,6 +130,7 @@ export interface PublicMeta {
 }
 
 export type LessonStatus = 'ready' | 'draft'
+export type LessonType = 'standard' | 'control' | 'practical'
 
 export interface Lesson {
   id: string
@@ -149,6 +150,7 @@ export interface Lesson {
   videoUrl: string
   durationMin: number
   status: LessonStatus
+  lessonType?: LessonType
   subjectId?: string | null
   subjectName?: string
 }
@@ -167,6 +169,8 @@ export interface JournalColumn {
   classId: string
   date: string
   lessonId: string
+  quarter?: number
+  lessonType?: LessonType
 }
 
 export interface JournalEntry {

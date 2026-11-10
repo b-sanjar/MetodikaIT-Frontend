@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ChevronRight, Clock, Play, Plus, Sparkles, Trash2, UserRound } from 'lucide-react'
-import type { Lesson } from '../types'
+import { ArrowLeft, ChevronRight, Clock, FileCheck, Play, Plus, Sparkles, Trash2, UserRound } from 'lucide-react'
+import type { Lesson, LessonType } from '../types'
 import * as api from '../services/api'
 import { QUARTER_NAMES } from '../data/curriculum'
 import { useFetch } from '../hooks/useFetch'
 import { useAuth } from '../context/AuthContext'
+import { useQuarter } from '../context/QuarterContext'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Chip from '../components/Chip'
@@ -21,12 +22,13 @@ export default function GradeDetailPage() {
   const grade = Number(gradeParam)
   const navigate = useNavigate()
   const { canTeach, isAdmin, user } = useAuth()
-  const [quarter, setQuarter] = useState(1)
+  const { quarter, setQuarter } = useQuarter()
   const [selectedSubject, setSelectedSubject] = useState<string>('all')
 
   const [addModal, setAddModal] = useState(false)
   const [newTitle, setNewTitle] = useState('')
-  const [newQuarter, setNewQuarter] = useState(1)
+  const [newQuarter, setNewQuarter] = useState(quarter)
+  const [newLessonType, setNewLessonType] = useState<LessonType>('standard')
   const [newSubjectId, setNewSubjectId] = useState<string>('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -70,6 +72,7 @@ export default function GradeDetailPage() {
   const openAdd = () => {
     setNewTitle('')
     setNewQuarter(quarter)
+    setNewLessonType('standard')
     setSaveError(null)
 
     if (isAdmin) {
@@ -104,6 +107,7 @@ export default function GradeDetailPage() {
         quarter: newQuarter,
         title: newTitle.trim(),
         subjectId: resolvedSubId || null,
+        lessonType: newLessonType,
       })
       navigate(`/lessons/${lesson.id}`)
     } catch (err) {
@@ -221,10 +225,24 @@ export default function GradeDetailPage() {
                   {lesson.order}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="truncate text-sm font-semibold text-gray-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-300">
                       {lesson.title}
                     </h3>
+                    {(lesson.lessonType === 'control' ||
+                      lesson.title.toLowerCase().includes('nazorat') ||
+                      lesson.title.toLowerCase().includes('oraliq') ||
+                      lesson.title.toLowerCase().includes('chsb') ||
+                      lesson.title.toLowerCase().includes('bsb')) && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-purple-500/15 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:text-purple-300 shrink-0">
+                        <FileCheck size={11} /> Oraliq nazorat
+                      </span>
+                    )}
+                    {lesson.lessonType === 'practical' && (
+                      <span className="rounded-md bg-cyan-500/15 px-2 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-300 shrink-0">
+                        Amaliy ish
+                      </span>
+                    )}
                     {lesson.subjectName && (
                       <Chip tone="primary" className="text-[10px] shrink-0 font-medium">
                         {lesson.subjectName}
@@ -351,6 +369,48 @@ export default function GradeDetailPage() {
               Sizga hali birorta fan biriktirilmagan. Dars qo‘shish uchun administratorga murojaat qiling.
             </div>
           )}
+
+          {/* Lesson Type selector (Requirement 9) */}
+          <Field label="Dars mashg‘uloti turi">
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setNewLessonType('standard')}
+                className={cn(
+                  'rounded-xl border p-2 text-center text-xs font-bold transition-all cursor-pointer',
+                  newLessonType === 'standard'
+                    ? 'border-primary-500 bg-primary-500/10 text-primary-600 dark:border-primary-400 dark:text-primary-300 ring-2 ring-primary-500/20'
+                    : 'border-gray-200 bg-white/70 text-gray-600 hover:bg-gray-50 dark:border-edge dark:bg-surface-2 dark:text-gray-400',
+                )}
+              >
+                Oddiy dars
+              </button>
+              <button
+                type="button"
+                onClick={() => setNewLessonType('control')}
+                className={cn(
+                  'rounded-xl border p-2 text-center text-xs font-bold transition-all cursor-pointer',
+                  newLessonType === 'control'
+                    ? 'border-purple-500 bg-purple-500/15 text-purple-700 dark:border-purple-400 dark:text-purple-300 ring-2 ring-purple-500/30'
+                    : 'border-gray-200 bg-white/70 text-gray-600 hover:bg-gray-50 dark:border-edge dark:bg-surface-2 dark:text-gray-400',
+                )}
+              >
+                Oraliq nazorat
+              </button>
+              <button
+                type="button"
+                onClick={() => setNewLessonType('practical')}
+                className={cn(
+                  'rounded-xl border p-2 text-center text-xs font-bold transition-all cursor-pointer',
+                  newLessonType === 'practical'
+                    ? 'border-cyan-500 bg-cyan-500/15 text-cyan-700 dark:border-cyan-400 dark:text-cyan-300 ring-2 ring-cyan-500/30'
+                    : 'border-gray-200 bg-white/70 text-gray-600 hover:bg-gray-50 dark:border-edge dark:bg-surface-2 dark:text-gray-400',
+                )}
+              >
+                Amaliy ish
+              </button>
+            </div>
+          </Field>
 
           <Field label="Chorak">
             <Select value={newQuarter} onChange={(e) => setNewQuarter(Number(e.target.value))}>

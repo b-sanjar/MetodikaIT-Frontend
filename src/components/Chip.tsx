@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { cn } from '../utils/cn'
 
-type Tone = 'primary' | 'green' | 'amber' | 'red' | 'gray'
+type Tone = 'primary' | 'green' | 'amber' | 'red' | 'gray' | 'purple'
 
 const tones: Record<Tone, string> = {
   primary:
@@ -12,6 +12,8 @@ const tones: Record<Tone, string> = {
     'bg-amber-500/10 text-amber-600 ring-amber-500/30 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-400/25',
   red: 'bg-red-500/10 text-red-600 ring-red-500/25 dark:bg-red-500/15 dark:text-red-300 dark:ring-red-400/25',
   gray: 'bg-gray-500/10 text-gray-600 ring-gray-500/20 dark:bg-gray-400/10 dark:text-gray-300 dark:ring-gray-400/20',
+  purple:
+    'bg-purple-500/10 text-purple-700 ring-purple-500/30 dark:bg-purple-500/20 dark:text-purple-300 dark:ring-purple-400/25',
 }
 
 interface Props {

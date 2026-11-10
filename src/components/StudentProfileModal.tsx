@@ -1,11 +1,27 @@
 import { useMemo, useState } from 'react'
-import { Award, BookOpen, CalendarCheck, Check, Copy, Flame, History, Link2, Lock, Sparkles, Star } from 'lucide-react'
+import {
+  ArrowRightLeft,
+  Award,
+  BookOpen,
+  CalendarCheck,
+  Check,
+  Copy,
+  Flame,
+  History,
+  Link2,
+  Lock,
+  Sparkles,
+  Star,
+} from 'lucide-react'
 import * as api from '../services/api'
 import { useFetch } from '../hooks/useFetch'
 import { useCountUp } from '../hooks/useCountUp'
+import { useAuth } from '../context/AuthContext'
 import Avatar from './Avatar'
+import Button from './Button'
 import Modal from './Modal'
 import { ErrorState, Spinner } from './States'
+import StudentQuarterChart from './StudentQuarterChart'
 import {
   computeStats,
   evaluateAchievements,
@@ -14,7 +30,7 @@ import {
 } from '../utils/gamification'
 import { cn } from '../utils/cn'
 import { formatDateShort } from '../utils/format'
-import type { BadgeDef, Student } from '../types'
+import type { BadgeDef, ClassGroup, Student } from '../types'
 
 interface Props {
   student: Student | null
@@ -23,6 +39,7 @@ interface Props {
   classLabel: string
   badgeDefs: BadgeDef[]
   onClose: () => void
+  onStudentUpdated?: (updated: Student) => void
 }
 
 /**
@@ -30,31 +47,75 @@ interface Props {
  * to the next rank, points timeline, journal stats and an achievements board.
  * Journal and points history come from the per-student endpoints.
  */
-export default function StudentProfileModal({ student, position, classLabel, badgeDefs, onClose }: Props) {
+export default function StudentProfileModal({
+  student,
+  position,
+  classLabel,
+  badgeDefs,
+  onClose,
+  onStudentUpdated,
+}: Props) {
+  const { user, isAdmin } = useAuth()
+  const [currentStudent, setCurrentStudent] = useState<Student | null>(student)
+  const [transferOpen, setTransferOpen] = useState(false)
+  const [allClasses, setAllClasses] = useState<ClassGroup[]>([])
+  const [selectedNewClassId, setSelectedNewClassId] = useState(student?.classId || '')
+  const [transferring, setTransferring] = useState(false)
+  const [transferError, setTransferError] = useState<string | null>(null)
+  const [transferSuccess, setTransferSuccess] = useState(false)
+
+  const activeStudent = currentStudent || student
+
   const { data, loading, error, reload } = useFetch(
     () =>
-      student
-        ? Promise.all([api.getStudentJournal(student.id), api.getPointsHistory(student.id)])
+      activeStudent
+        ? Promise.all([api.getStudentJournal(activeStudent.id), api.getPointsHistory(activeStudent.id)])
         : Promise.resolve(null),
-    [student?.id],
+    [activeStudent?.id],
   )
 
-  const points = useCountUp(student?.points ?? 0)
+  const points = useCountUp(activeStudent?.points ?? 0)
   const [copiedPin, setCopiedPin] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
 
   const stats = useMemo(() => computeStats(data?.[0] ?? []), [data])
   const history = data?.[1] ?? []
 
-  if (!student) return null
+  if (!activeStudent) return null
 
-  const { rank, next, pct, remaining } = rankProgress(student.points)
-  const achievements = evaluateAchievements(student, stats, position)
+  const { rank, next, pct, remaining } = rankProgress(activeStudent.points)
+  const achievements = evaluateAchievements(activeStudent, stats, position)
   const unlockedCount = achievements.filter((a) => a.unlocked).length
-  const ownBadges = student.badges
+  const ownBadges = activeStudent.badges
     .map((id) => badgeDefs.find((d) => d.id === id))
     .filter((d): d is BadgeDef => Boolean(d))
   const RankIcon = rank.icon
+
+  const handleTransfer = async () => {
+    if (!activeStudent || !selectedNewClassId || selectedNewClassId === activeStudent.classId) return
+    setTransferring(true)
+    setTransferError(null)
+    try {
+      const updated = await api.saveStudent({
+        id: activeStudent.id,
+        name: activeStudent.name,
+        classId: selectedNewClassId,
+        points: activeStudent.points,
+        badges: activeStudent.badges,
+      })
+      setCurrentStudent(updated)
+      onStudentUpdated?.(updated)
+      setTransferSuccess(true)
+      setTimeout(() => {
+        setTransferOpen(false)
+        setTransferSuccess(false)
+      }, 1000)
+    } catch (err) {
+      setTransferError(err instanceof Error ? err.message : 'Sinfni ko‘chirishda xatolik yuz berdi')
+    } finally {
+      setTransferring(false)
+    }
+  }
 
   return (
     <Modal open title="O‘quvchi profili" onClose={onClose} wide>
@@ -81,7 +142,7 @@ export default function StudentProfileModal({ student, position, classLabel, bad
           )}
 
           <div className="relative mx-auto w-fit">
-            <Avatar name={student.name} size="xl" className="animate-pop ring-4 ring-white/50 dark:ring-white/10" />
+            <Avatar name={activeStudent.name} size="xl" className="animate-pop ring-4 ring-white/50 dark:ring-white/10" />
             <span
               className={cn(
                 'absolute -right-1.5 -bottom-1.5 flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white shadow-lg dark:border-white/10 dark:bg-surface-2',
@@ -92,15 +153,40 @@ export default function StudentProfileModal({ student, position, classLabel, bad
             </span>
           </div>
 
-          <p className="font-display mt-3 text-xl font-semibold text-gray-900 dark:text-white">{student.name}</p>
-          <p className="text-xs text-gray-400">{classLabel} sinf o‘quvchisi</p>
+          <p className="font-display mt-3 text-xl font-semibold text-gray-900 dark:text-white">{activeStudent.name}</p>
+          <div className="mt-1 flex items-center justify-center gap-2">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {allClasses.find((c) => c.id === activeStudent.classId)
+                ? `${allClasses.find((c) => c.id === activeStudent.classId)?.grade}-«${allClasses.find((c) => c.id === activeStudent.classId)?.letter}» sinf`
+                : `${classLabel} sinf o‘quvchisi`}
+            </span>
+            {(isAdmin || user?.role === 'teacher') && (
+              <button
+                type="button"
+                onClick={async () => {
+                  setTransferOpen(true)
+                  setTransferError(null)
+                  if (allClasses.length === 0) {
+                    const list = await api.getClasses().catch(() => [])
+                    setAllClasses(list)
+                  }
+                  setSelectedNewClassId(activeStudent.classId)
+                }}
+                className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-primary-600 transition-colors hover:border-primary-400 hover:text-primary-700 dark:border-edge dark:bg-surface-2 dark:text-primary-400 cursor-pointer shadow-xs"
+                title="O‘quvchini boshqa sinfga ko‘chirish"
+              >
+                <ArrowRightLeft size={11} />
+                <span>Sinfni o‘zgartirish</span>
+              </button>
+            )}
+          </div>
 
-          {student.code && (
+          {activeStudent.code && (
             <div className="mt-2.5 flex items-center justify-center gap-2">
               <button
                 type="button"
                 onClick={() => {
-                  navigator.clipboard.writeText(student.code || '')
+                  navigator.clipboard.writeText(activeStudent.code || '')
                   setCopiedPin(true)
                   setTimeout(() => setCopiedPin(false), 2000)
                 }}
@@ -115,12 +201,12 @@ export default function StudentProfileModal({ student, position, classLabel, bad
                 {copiedPin ? (
                   <>
                     <Check size={14} className="text-emerald-500" />
-                    <span>Kod nusxalandi! ✓</span>
+                    <span>Kod nusxalandi!</span>
                   </>
                 ) : (
                   <>
                     <Copy size={14} className="text-gray-400" />
-                    <span>PIN: {student.code}</span>
+                    <span>PIN: {activeStudent.code}</span>
                   </>
                 )}
               </button>
@@ -128,7 +214,7 @@ export default function StudentProfileModal({ student, position, classLabel, bad
               <button
                 type="button"
                 onClick={() => {
-                  const url = `${window.location.origin}/parents?code=${student.code}`
+                  const url = `${window.location.origin}/parents?code=${activeStudent.code}`
                   navigator.clipboard.writeText(url)
                   setCopiedLink(true)
                   setTimeout(() => setCopiedLink(false), 2000)
@@ -144,7 +230,7 @@ export default function StudentProfileModal({ student, position, classLabel, bad
                 {copiedLink ? (
                   <>
                     <Check size={14} className="text-emerald-500" />
-                    <span>Havola nusxalandi! ✓</span>
+                    <span>Havola nusxalandi!</span>
                   </>
                 ) : (
                   <>
@@ -169,7 +255,7 @@ export default function StudentProfileModal({ student, position, classLabel, bad
           <p className="text-[11px] text-gray-400">umumiy ball</p>
 
           <div className="mt-1.5 flex items-center justify-center gap-0.5">
-            {Array.from({ length: starsFor(student.points) }).map((_, i) => (
+            {Array.from({ length: starsFor(activeStudent.points) }).map((_, i) => (
               <Star
                 key={i}
                 size={15}
@@ -232,6 +318,12 @@ export default function StudentProfileModal({ student, position, classLabel, bad
                 </div>
               ))}
             </div>
+
+            {/* Quarterly Visual Progress & Statistics Chart (Requirement 8) */}
+            <StudentQuarterChart
+              entries={data?.[0] ?? []}
+              studentName={activeStudent.name}
+            />
 
             {/* Points timeline */}
             <div>
@@ -364,6 +456,57 @@ export default function StudentProfileModal({ student, position, classLabel, bad
           </>
         )}
       </div>
+
+      {/* Transfer Student Class Modal (Requirement 13) */}
+      <Modal
+        open={transferOpen}
+        title="O‘quvchini boshqa sinfga ko‘chirish"
+        onClose={() => setTransferOpen(false)}
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            <strong className="text-gray-900 dark:text-white">{activeStudent.name}</strong>ni boshqa sinfga ko‘chirish uchun quyidagi ro‘yxatdan yangi sinfni tanlang. O‘quvchining to‘plagan ballari va natijalari saqlanadi.
+          </p>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
+              Yangi sinfni tanlang:
+            </label>
+            <select
+              value={selectedNewClassId}
+              onChange={(e) => setSelectedNewClassId(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm dark:border-edge dark:bg-surface-2 dark:text-white"
+            >
+              {allClasses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.grade}-«{c.letter}» sinf {c.id === activeStudent.classId ? '(Hozirgi sinfi)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {transferError && <p className="text-xs font-medium text-red-500">{transferError}</p>}
+          {transferSuccess && (
+            <div className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500/10 p-2.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 text-center">
+              <Check size={14} />
+              <span>O‘quvchi yangi sinfga muvaffaqiyatli ko‘chirildi!</span>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" type="button" onClick={() => setTransferOpen(false)}>
+              Bekor qilish
+            </Button>
+            <Button
+              type="button"
+              onClick={handleTransfer}
+              disabled={transferring || selectedNewClassId === activeStudent.classId}
+            >
+              {transferring ? 'Ko‘chirilmoqda...' : 'Sinfni ko‘chirish'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </Modal>
   )
 }

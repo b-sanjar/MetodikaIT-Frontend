@@ -27,7 +27,7 @@ import Chip from '../components/Chip'
 import Modal from '../components/Modal'
 import { Field, Input, Select, Textarea } from '../components/Field'
 import { ErrorState, Spinner } from '../components/States'
-import type { Lesson, LessonStatus } from '../types'
+import type { Lesson, LessonStatus, LessonType } from '../types'
 import type { ReactNode } from 'react'
 
 interface EditState {
@@ -40,6 +40,7 @@ interface EditState {
   outcomes: string
   durationMin: string
   status: LessonStatus
+  lessonType: LessonType
 }
 
 const toLines = (arr: string[]) => arr.join('\n')
@@ -60,6 +61,7 @@ function editStateFrom(lesson: Lesson): EditState {
     outcomes: toLines(lesson.outcomes),
     durationMin: String(lesson.durationMin),
     status: lesson.status,
+    lessonType: lesson.lessonType || 'standard',
   }
 }
 
@@ -258,6 +260,7 @@ export default function LessonPage() {
         outcomes: fromLines(edit.outcomes),
         durationMin: Math.max(1, Number(edit.durationMin) || 45),
         status: edit.status,
+        lessonType: edit.lessonType,
       })
       setData(() => updated)
       setEdit(null)
@@ -306,6 +309,13 @@ export default function LessonPage() {
             <Chip tone="primary">{lesson.grade}-sinf</Chip>
             <Chip tone="gray">{QUARTER_NAMES[lesson.quarter - 1]}</Chip>
             <Chip tone="gray">{lesson.order}-dars</Chip>
+            {(lesson.lessonType === 'control' ||
+              lesson.title.toLowerCase().includes('nazorat') ||
+              lesson.title.toLowerCase().includes('oraliq')) && (
+              <Chip tone="purple" className="font-bold">
+                Oraliq nazorat (BSB/ChSB)
+              </Chip>
+            )}
             <Chip tone={lesson.status === 'ready' ? 'green' : 'amber'} dot>
               {lesson.status === 'ready' ? 'Tayyor ishlanma' : 'Qoralama'}
             </Chip>
@@ -501,7 +511,7 @@ export default function LessonPage() {
                 />
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Field label="Dars davomiyligi (daqiqa)">
                 <Input
                   type="number"
@@ -510,6 +520,16 @@ export default function LessonPage() {
                   value={edit.durationMin}
                   onChange={(e) => setEdit({ ...edit, durationMin: e.target.value })}
                 />
+              </Field>
+              <Field label="Dars turi">
+                <Select
+                  value={edit.lessonType}
+                  onChange={(e) => setEdit({ ...edit, lessonType: e.target.value as LessonType })}
+                >
+                  <option value="standard">Oddiy dars</option>
+                  <option value="control">Oraliq nazorat (BSB/ChSB)</option>
+                  <option value="practical">Amaliy mashg‘ulot</option>
+                </Select>
               </Field>
               <Field label="Holati">
                 <Select

@@ -240,7 +240,7 @@ export default function StudentsPage() {
                         {copiedPinId === s.id ? (
                           <>
                             <Check size={13} className="text-emerald-500" />
-                            <span>Kod nusxalandi! ✓</span>
+                            <span>Kod nusxalandi!</span>
                           </>
                         ) : (
                           <>
@@ -322,6 +322,12 @@ export default function StudentsPage() {
         classLabel={viewing ? className(viewing.classId) : ''}
         badgeDefs={data.badgeDefs}
         onClose={() => setViewingId(null)}
+        onStudentUpdated={(updated) => {
+          setData((prev) => ({
+            ...prev,
+            students: prev.students.map((s) => (s.id === updated.id ? updated : s)),
+          }))
+        }}
       />
 
       {/* Add / edit */}
@@ -337,13 +343,16 @@ export default function StudentsPage() {
                 autoFocus
               />
             </Field>
-            <Field label="Sinf">
+            <Field label="Sinf (yoki boshqa sinfga ko‘chirish)">
               <Select value={form.classId} onChange={(e) => setForm({ ...form, classId: e.target.value })}>
-                {manageableClasses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.grade}-«{c.letter}» sinf
-                  </option>
-                ))}
+                {data.classes
+                  .slice()
+                  .sort((a, b) => a.grade - b.grade || a.letter.localeCompare(b.letter))
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.grade}-«{c.letter}» sinf {c.id === form.classId ? '(Hozirgi sinfi)' : ''}
+                    </option>
+                  ))}
               </Select>
             </Field>
             {actionError && <p className="text-sm text-red-500">{actionError}</p>}

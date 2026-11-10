@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Award, Crown, Info, Medal, Plus, Star } from 'lucide-react'
+import { AlertTriangle, Award, Crown, Info, Medal, Plus, Sparkles, Star } from 'lucide-react'
 import * as api from '../services/api'
 import { useFetch } from '../hooks/useFetch'
 import { useAuth } from '../context/AuthContext'
@@ -450,13 +450,14 @@ export default function LeaderboardPage() {
                 setRewardPoints('10')
               }}
               className={cn(
-                'flex-1 rounded-md py-1.5 text-xs font-semibold transition-all',
+                'flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-semibold transition-all',
                 actionType === 'reward'
                   ? 'bg-white text-emerald-600 shadow-xs dark:bg-surface dark:text-emerald-400'
                   : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white',
               )}
             >
-              🌟 Rag‘bat (+ ball)
+              <Sparkles size={14} className="text-emerald-500" />
+              <span>Rag‘bat (+ ball)</span>
             </button>
             <button
               type="button"
@@ -466,13 +467,14 @@ export default function LeaderboardPage() {
                 setRewardBadge('')
               }}
               className={cn(
-                'flex-1 rounded-md py-1.5 text-xs font-semibold transition-all',
+                'flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-semibold transition-all',
                 actionType === 'penalty'
                   ? 'bg-white text-red-600 shadow-xs dark:bg-surface dark:text-red-400'
                   : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white',
               )}
             >
-              ⚠️ Jazo (- ball)
+              <AlertTriangle size={14} className="text-red-500" />
+              <span>Jazo (- ball)</span>
             </button>
           </div>
 

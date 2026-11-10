@@ -26,8 +26,10 @@ import Avatar from '../components/Avatar'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Chip from '../components/Chip'
+import StudentQuarterChart from '../components/StudentQuarterChart'
 import { Input, Select } from '../components/Field'
 import { ErrorState, Spinner } from '../components/States'
+import type { JournalEntry } from '../types'
 import { cn } from '../utils/cn'
 import { formatDateShort } from '../utils/format'
 import type {
@@ -182,6 +184,32 @@ export default function ParentPortalPage() {
     const entry = board.find((b) => b.studentId === student.id || b.code === student.code)
     return entry?.position ?? null
   }, [board, student])
+
+  const parentEntries: JournalEntry[] = useMemo(() => {
+    if (!student) return []
+    const entries: JournalEntry[] = []
+    for (const ev of student.recentEvents || []) {
+      let grade: number | null = null
+      if (ev.reason.includes('«5»')) grade = 5
+      else if (ev.reason.includes('«4»')) grade = 4
+      else if (ev.reason.includes('«3»')) grade = 3
+      else if (ev.reason.includes('«2»')) grade = 2
+      entries.push({
+        id: ev.id,
+        studentId: student.id,
+        classId: student.classId,
+        date: ev.date,
+        grade,
+        attendance: ev.reason.includes('Sababli')
+          ? 'sababli'
+          : ev.reason.includes('Sababsiz') || ev.reason.includes('kelmadi')
+            ? 'sababsiz'
+            : 'keldi',
+        note: ev.reason,
+      })
+    }
+    return entries
+  }, [student])
 
   return (
     <div className="app-bg isolate min-h-screen text-gray-900 dark:text-gray-100 selection:bg-primary-500/30">
@@ -344,7 +372,7 @@ export default function ParentPortalPage() {
                         className="inline-flex items-center gap-1 font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 cursor-pointer"
                       >
                         <Copy size={13} />
-                        {copied ? 'Havola nusxalandi! ✓' : 'Havolani nusxalash'}
+                        {copied ? 'Havola nusxalandi!' : 'Havolani nusxalash'}
                       </button>
                     </div>
                   </div>
@@ -669,6 +697,12 @@ export default function ParentPortalPage() {
                     </p>
                   </Card>
                 </div>
+
+                {/* Quarterly Visual Progress Chart (Requirement 8) */}
+                <StudentQuarterChart
+                  entries={parentEntries}
+                  studentName={student.name}
+                />
 
                 {/* Subject Grades Cards */}
                 <div className="space-y-3">
