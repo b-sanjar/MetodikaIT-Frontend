@@ -405,8 +405,8 @@ export default function StudentProfileModal({
         {!loading && !error && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-5 border-t border-gray-200/80 dark:border-edge">
             {/* LEFT: Points Timeline */}
-            <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-edge dark:bg-surface-2">
-              <div className="flex items-center justify-between mb-3.5">
+            <div className="flex flex-col h-full rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-edge dark:bg-surface-2">
+              <div className="flex shrink-0 items-center justify-between mb-3.5">
                 <h4 className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
                   <History size={17} className="text-primary-500" />
                   <span>Ballar tarixi</span>
@@ -415,7 +415,7 @@ export default function StudentProfileModal({
               </div>
 
               {history.length ? (
-                <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
+                <div className="flex-1 min-h-[320px] max-h-[520px] lg:max-h-[660px] overflow-y-auto space-y-2 pr-1.5">
                   {history.map((e) => {
                     const badge = e.badgeId ? badgeDefs.find((d) => d.id === e.badgeId) : null
                     const isPositive = e.delta >= 0
@@ -455,9 +455,9 @@ export default function StudentProfileModal({
                   })}
                 </div>
               ) : (
-                <p className="rounded-xl border border-dashed border-gray-200 py-8 text-center text-xs text-gray-400 dark:border-edge">
+                <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-gray-200 py-8 text-center text-xs text-gray-400 dark:border-edge">
                   Hozircha ball tarixi yo‘q
-                </p>
+                </div>
               )}
             </div>
 
