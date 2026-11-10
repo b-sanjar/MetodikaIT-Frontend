@@ -187,7 +187,7 @@ export default function StudentQuarterChart({
         </div>
 
         {/* Quarter Tabs */}
-        <div className="flex flex-wrap items-center gap-1 rounded-xl bg-gray-100/80 p-1 dark:bg-surface-3">
+        <div className="flex flex-wrap items-center gap-1 rounded-xl border border-gray-200/80 bg-gray-100/90 p-1 dark:border-edge dark:bg-surface-3">
           {QUARTER_NAMES.map((_name, i) => {
             const qNum = i + 1
             const isActive = selectedQuarter === qNum
@@ -199,8 +199,8 @@ export default function StudentQuarterChart({
                 className={cn(
                   'rounded-lg px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer',
                   isActive
-                    ? 'bg-white text-primary-600 shadow-sm dark:bg-surface dark:text-primary-400'
-                    : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200',
+                    ? 'bg-white text-primary-600 shadow-sm dark:bg-primary-600 dark:text-white'
+                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/5',
                 )}
               >
                 {qNum}-chorak
@@ -213,8 +213,8 @@ export default function StudentQuarterChart({
             className={cn(
               'rounded-lg px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer',
               selectedQuarter === 'all'
-                ? 'bg-white text-primary-600 shadow-sm dark:bg-surface dark:text-primary-400'
-                : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200',
+                ? 'bg-white text-primary-600 shadow-sm dark:bg-primary-600 dark:text-white'
+                : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/5',
             )}
           >
             Barchasi
@@ -307,13 +307,13 @@ export default function StudentQuarterChart({
       </div>
 
       {/* SVG Interactive Progress Chart */}
-      <div className="mt-5 rounded-2xl border border-gray-100 bg-gray-50/50 p-3 dark:border-edge dark:bg-surface-3/50">
+      <div className="mt-5 rounded-2xl border border-gray-200/80 bg-gray-50/70 p-3.5 dark:border-edge dark:bg-surface-3/60">
         <div className="mb-2 flex items-center justify-between px-2">
-          <span className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-300">
+          <span className="flex items-center gap-1.5 text-xs font-bold text-gray-800 dark:text-gray-200">
             <TrendingUp size={15} className="text-primary-500" />
             Darslar kesimida o‘zlashtirish dinamikasi
           </span>
-          <span className="text-[11px] text-gray-400">
+          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
             {chartPoints.length} ta dars mashg‘uloti
           </span>
         </div>
@@ -340,7 +340,7 @@ export default function StudentQuarterChart({
               {[5, 4, 3, 2].map((g) => {
                 const y = getY(g)
                 return (
-                  <g key={g} className="opacity-50">
+                  <g key={g} className="opacity-70 dark:opacity-50">
                     <line
                       x1={paddingX}
                       y1={y}
@@ -348,13 +348,13 @@ export default function StudentQuarterChart({
                       y2={y}
                       stroke="currentColor"
                       strokeDasharray="4 4"
-                      className="text-gray-200 dark:text-gray-700"
+                      className="text-gray-200 dark:text-white/10"
                     />
                     <text
                       x={paddingX - 10}
                       y={y + 4}
                       textAnchor="end"
-                      className="fill-gray-400 text-[11px] font-bold"
+                      className="fill-gray-500 text-[11px] font-bold dark:fill-gray-400"
                     >
                       {g}
                     </text>
@@ -441,7 +441,7 @@ export default function StudentQuarterChart({
                       x={x}
                       y={height - paddingY + 18}
                       textAnchor="middle"
-                      className="fill-gray-400 text-[9px] font-medium"
+                      className="fill-gray-500 text-[9px] font-medium dark:fill-gray-400"
                     >
                       {formatDateShort(p.date)}
                     </text>
@@ -453,7 +453,7 @@ export default function StudentQuarterChart({
             {/* Hover Tooltip Card */}
             {hoveredItem && (
               <div
-                className="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-xl backdrop-blur-md dark:border-edge dark:bg-surface/95 z-30 min-w-44 text-center transition-all animate-in fade-in zoom-in-95"
+                className="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-xl backdrop-blur-md dark:border-edge dark:bg-surface-2/95 z-30 min-w-44 text-center transition-all animate-in fade-in zoom-in-95"
               >
                 <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-gray-900 dark:text-white">
                   <span>Sana: {hoveredItem.date}</span>
@@ -491,7 +491,7 @@ export default function StudentQuarterChart({
         </div>
 
         {/* Segmented bar */}
-        <div className="flex h-3 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-surface-3">
+        <div className="flex h-3 w-full overflow-hidden rounded-full bg-gray-200/80 dark:bg-surface-3">
           {stats.count5 > 0 && (
             <div
               style={{ width: `${(stats.count5 / (stats.countGrades || 1)) * 100}%` }}

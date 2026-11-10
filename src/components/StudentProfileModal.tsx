@@ -178,7 +178,7 @@ export default function StudentProfileModal({
               </h3>
 
               <div className="mt-1.5 flex flex-wrap items-center justify-center gap-2">
-                <span className="inline-flex items-center rounded-lg bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-700 dark:bg-surface-2 dark:text-gray-300">
+                <span className="inline-flex items-center rounded-lg border border-gray-200/80 bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-800 dark:border-edge dark:bg-surface-3 dark:text-gray-200">
                   {classDisplay}
                 </span>
 
@@ -194,11 +194,11 @@ export default function StudentProfileModal({
                       }
                       setSelectedNewClassId(activeStudent.classId)
                     }}
-                    className="inline-flex items-center gap-1 rounded-lg border border-primary-200 bg-primary-50/70 px-2.5 py-0.5 text-xs font-bold text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-800 dark:bg-primary-950/40 dark:text-primary-300 cursor-pointer shadow-xs"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-primary-200 bg-primary-50 px-2.5 py-1 text-xs font-bold text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-500/30 dark:bg-primary-500/15 dark:text-primary-300 dark:hover:bg-primary-500/25 cursor-pointer shadow-xs"
                     title="O‘quvchini boshqa sinfga ko‘chirish"
                   >
-                    <ArrowRightLeft size={11} />
-                    <span>Ko‘chirish</span>
+                    <ArrowRightLeft size={12} />
+                    <span>Sinfni ko‘chirish</span>
                   </button>
                 )}
               </div>
@@ -218,7 +218,7 @@ export default function StudentProfileModal({
                       'inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-mono font-bold transition-all cursor-pointer shadow-xs',
                       copiedPin
                         ? 'border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:border-emerald-400 dark:text-emerald-300'
-                        : 'border-gray-200 bg-white/90 text-gray-700 hover:border-primary-400 hover:text-primary-600 dark:border-edge dark:bg-surface-2 dark:text-gray-200 dark:hover:border-primary-500',
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-primary-400 hover:text-primary-600 dark:border-edge dark:bg-surface-3 dark:text-gray-200 dark:hover:border-primary-500 dark:hover:bg-surface-2',
                     )}
                   >
                     {copiedPin ? (
@@ -228,7 +228,7 @@ export default function StudentProfileModal({
                       </>
                     ) : (
                       <>
-                        <Copy size={13} className="text-gray-400" />
+                        <Copy size={13} className="text-gray-400 dark:text-gray-300" />
                         <span>PIN: {activeStudent.code}</span>
                       </>
                     )}
@@ -247,7 +247,7 @@ export default function StudentProfileModal({
                       'inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all cursor-pointer shadow-xs',
                       copiedLink
                         ? 'border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:border-emerald-400 dark:text-emerald-300'
-                        : 'border-gray-200 bg-white/90 text-gray-700 hover:border-primary-400 hover:text-primary-600 dark:border-edge dark:bg-surface-2 dark:text-gray-200 dark:hover:border-primary-500',
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-primary-400 hover:text-primary-600 dark:border-edge dark:bg-surface-3 dark:text-gray-200 dark:hover:border-primary-500 dark:hover:bg-surface-2',
                     )}
                   >
                     {copiedLink ? (
@@ -257,7 +257,7 @@ export default function StudentProfileModal({
                       </>
                     ) : (
                       <>
-                        <Link2 size={13} className="text-gray-400" />
+                        <Link2 size={13} className="text-gray-400 dark:text-gray-300" />
                         <span>Portal havolasi</span>
                       </>
                     )}
@@ -422,13 +422,13 @@ export default function StudentProfileModal({
                     return (
                       <div
                         key={e.id}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50/70 px-3.5 py-2.5 transition-colors hover:bg-gray-100/60 dark:border-edge/60 dark:bg-surface-3/50"
+                        className="flex items-center justify-between gap-3 rounded-xl border border-gray-200/80 bg-gray-50/80 px-3.5 py-2.5 transition-colors hover:bg-gray-100 dark:border-edge dark:bg-surface-3/80 dark:hover:bg-surface-3"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <span className="w-16 shrink-0 text-xs font-bold text-gray-400 tabular-nums">
+                          <span className="w-16 shrink-0 text-xs font-bold text-gray-500 tabular-nums dark:text-gray-400">
                             {formatDateShort(e.date)}
                           </span>
-                          <span className="truncate text-xs font-semibold text-gray-800 dark:text-gray-200" title={e.reason}>
+                          <span className="truncate text-xs font-semibold text-gray-900 dark:text-gray-100" title={e.reason}>
                             {e.reason}
                           </span>
                         </div>
@@ -443,8 +443,8 @@ export default function StudentProfileModal({
                             className={cn(
                               'inline-flex min-w-10 items-center justify-center rounded-lg px-2 py-0.5 text-xs font-black tabular-nums shadow-2xs',
                               isPositive
-                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                                : 'bg-red-500/15 text-red-700 dark:text-red-300',
+                                ? 'bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/30 dark:bg-emerald-500/20 dark:text-emerald-300'
+                                : 'bg-red-500/15 text-red-700 ring-1 ring-red-500/30 dark:bg-red-500/20 dark:text-red-300',
                             )}
                           >
                             {isPositive ? `+${e.delta}` : e.delta}
@@ -521,19 +521,26 @@ export default function StudentProfileModal({
                           'flex flex-col justify-between rounded-xl border p-3 text-center transition-all',
                           a.unlocked
                             ? a.def.tone
-                            : 'border-gray-200 bg-gray-50/60 opacity-75 dark:border-edge dark:bg-surface-3/40',
+                            : 'border-gray-200 bg-gray-50/90 dark:border-edge dark:bg-surface-3/80',
                         )}
                       >
                         <div>
                           <span
                             className={cn(
                               'mx-auto mb-1.5 flex h-9 w-9 items-center justify-center rounded-full shadow-2xs',
-                              a.unlocked ? 'bg-white/80 dark:bg-white/10' : 'bg-gray-200/80 text-gray-400 dark:bg-white/5',
+                              a.unlocked
+                                ? 'bg-white/80 dark:bg-white/10'
+                                : 'bg-gray-200 text-gray-500 dark:bg-white/10 dark:text-gray-300',
                             )}
                           >
                             {a.unlocked ? <Icon size={17} /> : <Lock size={15} />}
                           </span>
-                          <p className={cn('text-xs font-bold truncate', a.unlocked ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300')}>
+                          <p
+                            className={cn(
+                              'text-xs font-bold truncate',
+                              a.unlocked ? 'text-gray-900 dark:text-white' : 'text-gray-800 dark:text-gray-200',
+                            )}
+                          >
                             {a.def.name}
                           </p>
                           <p className="mt-0.5 text-[10px] line-clamp-2 text-gray-500 dark:text-gray-400 leading-tight">
@@ -543,10 +550,13 @@ export default function StudentProfileModal({
 
                         {!a.unlocked && (
                           <div className="mt-2.5">
-                            <div className="h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
-                              <div className="h-full rounded-full bg-primary-500 transition-all" style={{ width: `${a.pct}%` }} />
+                            <div className="h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-surface-2">
+                              <div
+                                className="h-full rounded-full bg-primary-500/80 dark:bg-primary-500 transition-all"
+                                style={{ width: `${a.pct}%` }}
+                              />
                             </div>
-                            <p className="mt-1 text-[10px] font-bold text-gray-400 tabular-nums">
+                            <p className="mt-1 text-[10px] font-bold text-gray-500 dark:text-gray-300 tabular-nums">
                               {Math.min(a.value, a.def.target)} / {a.def.target}
                             </p>
                           </div>
