@@ -24,8 +24,19 @@ import type {
   Teacher,
 } from '../types'
 
-const rawApiUrl = (import.meta.env.VITE_API_URL || '').trim()
-const BASE_URL: string = (rawApiUrl || 'https://metodikait-backend.onrender.com').replace(/\/+$/, '')
+function resolveBaseUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_URL || '').trim()
+  if (envUrl) return envUrl.replace(/\/+$/, '')
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ) {
+    return 'http://localhost:8000'
+  }
+  return 'https://metodikait-backend.onrender.com'
+}
+
+const BASE_URL: string = resolveBaseUrl()
 const TOKEN_KEY = 'mit:token'
 const PARENT_TOKEN_KEY = 'mit:parent_token'
 const PARENT_CODE_KEY = 'mit:parent_code'
