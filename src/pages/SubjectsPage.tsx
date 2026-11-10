@@ -224,8 +224,10 @@ export default function SubjectsPage() {
       {form && (
         <Modal
           open={form !== null}
-          title={form.id ? 'Fanni tahrirlash' : 'Yangi fan qo‘shish'}
+          title={form.id ? 'Fan ma’lumotlarini tahrirlash' : 'Yangi fan kiritish'}
+          subtitle="Maktab fani nomi, kodi, rangi va belgilanuvchi ikonkasini tanlang"
           onClose={() => setForm(null)}
+          size="lg"
         >
           <form onSubmit={handleSave} className="flex flex-col gap-4">
             <Field label="Fan nomi *">

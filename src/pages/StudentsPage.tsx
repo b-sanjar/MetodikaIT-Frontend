@@ -331,7 +331,13 @@ export default function StudentsPage() {
       />
 
       {/* Add / edit */}
-      <Modal open={form !== null} title={form?.id ? 'O‘quvchini tahrirlash' : 'Yangi o‘quvchi'} onClose={() => setForm(null)}>
+      <Modal
+        open={form !== null}
+        title={form?.id ? 'O‘quvchi ma’lumotlarini tahrirlash' : 'Yangi o‘quvchi qo‘shish'}
+        subtitle="O‘quvchining F.I.SH va biriktirilgan sinfini belgilang"
+        onClose={() => setForm(null)}
+        size="lg"
+      >
         {form && (
           <form onSubmit={submit} className="flex flex-col gap-4">
             <Field label="Familiya va ism">

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ChevronRight, Clock, FileCheck, Play, Plus, Sparkles, Trash2, UserRound } from 'lucide-react'
+import { ArrowLeft, BookOpen, ChevronRight, Clock, FileCheck, Play, Plus, Sparkles, Trash2, UserRound } from 'lucide-react'
 import type { Lesson, LessonType } from '../types'
 import * as api from '../services/api'
 import { QUARTER_NAMES } from '../data/curriculum'
@@ -307,137 +307,158 @@ export default function GradeDetailPage() {
       </div>
 
       {/* New lesson modal */}
-      <Modal open={addModal} title={`${grade}-sinfga yangi dars`} onClose={() => setAddModal(false)}>
-        <form onSubmit={submitAdd} className="flex flex-col gap-4">
+      <Modal
+        open={addModal}
+        title={`${grade}-sinfga yangi dars yaratish`}
+        subtitle="Yangi dars ishlanmasi, metodik reja va mavzuni tizimga kiritish"
+        icon={<BookOpen size={22} />}
+        onClose={() => setAddModal(false)}
+        size="xl"
+      >
+        <form onSubmit={submitAdd} className="flex flex-col gap-5">
           <Field label="Dars mavzusi *">
             <Input
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Masalan: Scratchda animatsiya yaratish"
+              placeholder="Masalan: Scratchda o‘yin va animatsiya yaratish"
               required
               autoFocus
+              className="font-medium text-base py-2.5"
             />
           </Field>
 
-          {/* Subject selection with role-based restriction */}
-          {isAdmin ? (
-            <Field label="Qaysi fanga tegishli? *">
-              <Select
-                value={newSubjectId}
-                onChange={(e) => setNewSubjectId(e.target.value)}
-                required
-              >
-                <option value="">Fan tanlang...</option>
-                {data.subjects.map((sub) => (
-                  <option key={sub.id} value={sub.id}>
-                    {sub.name} {sub.code ? `(${sub.code})` : ''}
+          {/* 2-column grid: Subject & Quarter */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Subject selection with role-based restriction */}
+            {isAdmin ? (
+              <Field label="Qaysi fanga tegishli? *">
+                <Select
+                  value={newSubjectId}
+                  onChange={(e) => setNewSubjectId(e.target.value)}
+                  required
+                >
+                  <option value="">Fan tanlang...</option>
+                  {data.subjects.map((sub) => (
+                    <option key={sub.id} value={sub.id}>
+                      {sub.name} {sub.code ? `(${sub.code})` : ''}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            ) : teacherAssignedSubjects.length === 1 ? (
+              <Field label="Dars fani (biriktirilgan yagona fan)">
+                <Input
+                  value={teacherAssignedSubjects[0].name}
+                  disabled
+                  className="bg-gray-100 dark:bg-surface-2 cursor-not-allowed font-medium opacity-80"
+                />
+                <p className="mt-1 text-[11px] text-gray-400">
+                  Sizga biriktirilgan yagona fan bo‘yicha dars yaratiladi.
+                </p>
+              </Field>
+            ) : teacherAssignedSubjects.length > 1 ? (
+              <Field label="Qaysi fanga tegishli? *">
+                <Select
+                  value={newSubjectId}
+                  onChange={(e) => setNewSubjectId(e.target.value)}
+                  required
+                >
+                  <option value="">O‘z faningizni tanlang...</option>
+                  {teacherAssignedSubjects.map((sub) => (
+                    <option key={sub.id} value={sub.id}>
+                      {sub.name} {sub.code ? `(${sub.code})` : ''}
+                    </option>
+                  ))}
+                </Select>
+                <p className="mt-1 text-[11px] text-gray-400">
+                  O‘zingizga biriktirilgan fanlardan birini tanlang.
+                </p>
+              </Field>
+            ) : (
+              <div className="rounded-xl bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-400">
+                Sizga hali birorta fan biriktirilmagan. Dars qo‘shish uchun administratorga murojaat qiling.
+              </div>
+            )}
+
+            <Field label="O‘quv choragi *">
+              <Select value={newQuarter} onChange={(e) => setNewQuarter(Number(e.target.value))}>
+                {QUARTER_NAMES.map((name, i) => (
+                  <option key={name} value={i + 1}>
+                    {name}
                   </option>
                 ))}
               </Select>
             </Field>
-          ) : teacherAssignedSubjects.length === 1 ? (
-            <Field label="Dars fani (biriktirilgan yagona fan)">
-              <Input
-                value={teacherAssignedSubjects[0].name}
-                disabled
-                className="bg-gray-100 dark:bg-surface-2 cursor-not-allowed font-medium opacity-80"
-              />
-              <p className="mt-1 text-[11px] text-gray-400">
-                Sizga biriktirilgan yagona fan bo‘yicha dars yaratiladi.
-              </p>
-            </Field>
-          ) : teacherAssignedSubjects.length > 1 ? (
-            <Field label="Qaysi fanga tegishli? *">
-              <Select
-                value={newSubjectId}
-                onChange={(e) => setNewSubjectId(e.target.value)}
-                required
-              >
-                <option value="">O‘z faningizni tanlang...</option>
-                {teacherAssignedSubjects.map((sub) => (
-                  <option key={sub.id} value={sub.id}>
-                    {sub.name} {sub.code ? `(${sub.code})` : ''}
-                  </option>
-                ))}
-              </Select>
-              <p className="mt-1 text-[11px] text-gray-400">
-                O‘zingizga biriktirilgan fanlardan birini tanlang.
-              </p>
-            </Field>
-          ) : (
-            <div className="rounded-lg bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-400">
-              Sizga hali birorta fan biriktirilmagan. Dars qo‘shish uchun administratorga murojaat qiling.
-            </div>
-          )}
+          </div>
 
           {/* Lesson Type selector (Requirement 9) */}
-          <Field label="Dars mashg‘uloti turi">
-            <div className="grid grid-cols-3 gap-2">
+          <Field label="Dars mashg‘uloti turi *">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
               <button
                 type="button"
                 onClick={() => setNewLessonType('standard')}
                 className={cn(
-                  'rounded-xl border p-2 text-center text-xs font-bold transition-all cursor-pointer',
+                  'flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all cursor-pointer shadow-xs',
                   newLessonType === 'standard'
-                    ? 'border-primary-500 bg-primary-500/10 text-primary-600 dark:border-primary-400 dark:text-primary-300 ring-2 ring-primary-500/20'
-                    : 'border-gray-200 bg-white/70 text-gray-600 hover:bg-gray-50 dark:border-edge dark:bg-surface-2 dark:text-gray-400',
+                    ? 'border-primary-500 bg-primary-500/10 text-primary-700 dark:border-primary-400 dark:bg-primary-500/20 dark:text-primary-300 ring-2 ring-primary-500/30'
+                    : 'border-gray-200 bg-white/70 text-gray-700 hover:border-gray-300 hover:bg-gray-50/80 dark:border-edge dark:bg-surface-2 dark:text-gray-300',
                 )}
               >
-                Oddiy dars
+                <span className="text-xs font-bold">Oddiy dars</span>
+                <span className="text-[10px] text-gray-400 mt-0.5">Nazariya va topshiriqlar</span>
               </button>
+
               <button
                 type="button"
                 onClick={() => setNewLessonType('control')}
                 className={cn(
-                  'rounded-xl border p-2 text-center text-xs font-bold transition-all cursor-pointer',
+                  'flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all cursor-pointer shadow-xs',
                   newLessonType === 'control'
-                    ? 'border-purple-500 bg-purple-500/15 text-purple-700 dark:border-purple-400 dark:text-purple-300 ring-2 ring-purple-500/30'
-                    : 'border-gray-200 bg-white/70 text-gray-600 hover:bg-gray-50 dark:border-edge dark:bg-surface-2 dark:text-gray-400',
+                    ? 'border-purple-500 bg-purple-500/15 text-purple-700 dark:border-purple-400 dark:bg-purple-950/40 dark:text-purple-300 ring-2 ring-purple-500/30'
+                    : 'border-gray-200 bg-white/70 text-gray-700 hover:border-gray-300 hover:bg-gray-50/80 dark:border-edge dark:bg-surface-2 dark:text-gray-300',
                 )}
               >
-                Oraliq nazorat
+                <span className="text-xs font-bold">Oraliq nazorat</span>
+                <span className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold mt-0.5">BSB / ChSB</span>
               </button>
+
               <button
                 type="button"
                 onClick={() => setNewLessonType('practical')}
                 className={cn(
-                  'rounded-xl border p-2 text-center text-xs font-bold transition-all cursor-pointer',
+                  'flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all cursor-pointer shadow-xs',
                   newLessonType === 'practical'
-                    ? 'border-cyan-500 bg-cyan-500/15 text-cyan-700 dark:border-cyan-400 dark:text-cyan-300 ring-2 ring-cyan-500/30'
-                    : 'border-gray-200 bg-white/70 text-gray-600 hover:bg-gray-50 dark:border-edge dark:bg-surface-2 dark:text-gray-400',
+                    ? 'border-cyan-500 bg-cyan-500/15 text-cyan-700 dark:border-cyan-400 dark:bg-cyan-950/40 dark:text-cyan-300 ring-2 ring-cyan-500/30'
+                    : 'border-gray-200 bg-white/70 text-gray-700 hover:border-gray-300 hover:bg-gray-50/80 dark:border-edge dark:bg-surface-2 dark:text-gray-300',
                 )}
               >
-                Amaliy ish
+                <span className="text-xs font-bold">Amaliy ish</span>
+                <span className="text-[10px] text-gray-400 mt-0.5">Laboratoriya va mashqlar</span>
               </button>
             </div>
           </Field>
 
-          <Field label="Chorak">
-            <Select value={newQuarter} onChange={(e) => setNewQuarter(Number(e.target.value))}>
-              {QUARTER_NAMES.map((name, i) => (
-                <option key={name} value={i + 1}>
-                  {name}
-                </option>
-              ))}
-            </Select>
-          </Field>
+          <div className="rounded-xl border border-gray-200/80 bg-gray-50/70 p-3.5 text-xs text-gray-500 dark:border-edge dark:bg-surface-2/60 dark:text-gray-400 leading-relaxed">
+            Dars ishlanmasi shabloni (maqsad, kutilayotgan natijalar, nazariya, amaliyot va uy vazifasi) avtomatik shakllantiriladi — keyinchalik dars sahifasida mustaqil tahrirlashingiz mumkin.
+          </div>
 
-          <p className="text-xs text-gray-400">
-            Ishlanma shabloni (maqsad, nazariya, amaliyot, uy vazifasi) avtomatik yaratiladi — keyin dars sahifasida
-            tahrirlaysiz. Yangi dars «Qoralama» holatida ochiladi.
-          </p>
+          {saveError && (
+            <div className="rounded-xl border border-red-500/30 bg-red-50/80 p-3 text-xs font-semibold text-red-700 dark:border-red-500/20 dark:bg-red-950/40 dark:text-red-300">
+              {saveError}
+            </div>
+          )}
 
-          {saveError && <p className="text-sm text-red-500">{saveError}</p>}
-
-          <div className="flex justify-end gap-2">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-edge">
             <Button variant="ghost" type="button" onClick={() => setAddModal(false)}>
               Bekor qilish
             </Button>
             <Button
               type="submit"
               disabled={saving || (!isAdmin && teacherAssignedSubjects.length === 0)}
+              className="shadow-sm"
             >
-              {saving ? 'Yaratilmoqda...' : 'Yaratish va ochish'}
+              <BookOpen size={16} className="mr-1.5" />
+              {saving ? 'Yaratilmoqda...' : 'Yaratish va darsni ochish'}
             </Button>
           </div>
         </form>

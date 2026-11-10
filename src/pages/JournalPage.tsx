@@ -854,7 +854,9 @@ export default function JournalPage() {
       <Modal
         open={cell !== null}
         title={cell ? `${cell.studentName} · ${formatDateShort(cell.date)}` : ''}
+        subtitle={activeClass ? `${activeClass.grade}-«${activeClass.letter}» sinf · Baholash va davomat jurnali` : undefined}
         onClose={() => setCell(null)}
+        size="lg"
       >
         {cell && (() => {
           const isAbsent = cellAttendance === 'kelmadi' || cellAttendance === 'sababli' || cellAttendance === 'sababsiz'
@@ -1147,66 +1149,134 @@ export default function JournalPage() {
       )}
 
       {/* New conducted lesson Column Modal (Requirements 2, 5, 9, 11) */}
-      <Modal open={colModal} title="Dars o‘tish — mavzuni tanlang" onClose={() => setColModal(false)}>
-        <form onSubmit={addColumn} className="flex flex-col gap-4">
-          <Field label="Sana">
-            <Input type="date" value={colDate} onChange={(e) => setColDate(e.target.value)} required />
-          </Field>
+      <Modal
+        open={colModal}
+        title="Dars o‘tish — Yangi dars ustunini ochish"
+        subtitle={activeClass ? `${activeClass.grade}-«${activeClass.letter}» sinf · ${activeQuarter}-chorak jurnali uchun dars mashg‘ulotini belgilash` : 'Jurnalga yangi dars kiritish'}
+        icon={<CalendarPlus size={22} />}
+        onClose={() => setColModal(false)}
+        size="xl"
+      >
+        <form onSubmit={addColumn} className="flex flex-col gap-5">
+          {/* 2-column top grid: Date & Quarter */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="O‘tilgan sana *">
+              <Input
+                type="date"
+                value={colDate}
+                onChange={(e) => setColDate(e.target.value)}
+                required
+                className="font-medium"
+              />
+            </Field>
 
-          {/* Dars turi (Requirement 9: Oraliq nazorat) */}
-          <Field label="Dars mashg‘uloti turi">
-            <div className="grid grid-cols-2 gap-2">
+            <Field label="Joriy chorak">
+              <div className="flex h-11 items-center justify-between rounded-xl border border-gray-200 bg-gray-50/70 px-3.5 text-sm font-bold text-gray-800 dark:border-edge dark:bg-surface-2 dark:text-gray-200">
+                <span>{activeQuarter}-chorak</span>
+                <span className="rounded-md bg-primary-500/10 px-2 py-0.5 text-xs text-primary-600 dark:bg-primary-500/20 dark:text-primary-300">
+                  Faol chorak
+                </span>
+              </div>
+            </Field>
+          </div>
+
+          {/* Dars turi (Requirement 9: Oraliq nazorat BSB/ChSB) */}
+          <Field label="Dars mashg‘uloti turi *">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <button
                 type="button"
                 onClick={() => setColLessonType('standard')}
                 className={cn(
-                  'flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition-all cursor-pointer',
+                  'flex items-center gap-3.5 rounded-2xl border p-4 text-left transition-all cursor-pointer shadow-xs',
                   colLessonType === 'standard'
-                    ? 'border-primary-500 bg-primary-500/10 text-primary-600 dark:border-primary-400 dark:text-primary-300 ring-2 ring-primary-500/20'
-                    : 'border-gray-200 bg-white/70 text-gray-600 hover:bg-gray-50 dark:border-edge dark:bg-surface-2 dark:text-gray-400',
+                    ? 'border-primary-500 bg-primary-500/10 text-primary-950 dark:border-primary-400 dark:bg-primary-500/15 dark:text-primary-100 ring-2 ring-primary-500/30'
+                    : 'border-gray-200 bg-white/70 text-gray-700 hover:border-gray-300 hover:bg-gray-50/80 dark:border-edge dark:bg-surface-2 dark:text-gray-300',
                 )}
               >
-                <BookOpen size={15} />
-                <span>Oddiy dars</span>
+                <span
+                  className={cn(
+                    'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                    colLessonType === 'standard'
+                      ? 'bg-primary-500 text-white shadow-xs'
+                      : 'bg-gray-100 text-gray-500 dark:bg-surface-3 dark:text-gray-400',
+                  )}
+                >
+                  <BookOpen size={20} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold leading-tight">Standart dars</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-tight">
+                    Mavzu bo‘yicha nazariya, amaliyot va joriy baholash
+                  </p>
+                </div>
               </button>
+
               <button
                 type="button"
                 onClick={() => setColLessonType('control')}
                 className={cn(
-                  'flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition-all cursor-pointer',
+                  'flex items-center gap-3.5 rounded-2xl border p-4 text-left transition-all cursor-pointer shadow-xs',
                   colLessonType === 'control'
-                    ? 'border-purple-500 bg-purple-500/15 text-purple-700 dark:border-purple-400 dark:text-purple-300 ring-2 ring-purple-500/30'
-                    : 'border-gray-200 bg-white/70 text-gray-600 hover:bg-gray-50 dark:border-edge dark:bg-surface-2 dark:text-gray-400',
+                    ? 'border-purple-500 bg-purple-500/15 text-purple-950 dark:border-purple-400 dark:bg-purple-950/40 dark:text-purple-100 ring-2 ring-purple-500/30'
+                    : 'border-gray-200 bg-white/70 text-gray-700 hover:border-gray-300 hover:bg-gray-50/80 dark:border-edge dark:bg-surface-2 dark:text-gray-300',
                 )}
               >
-                <FileCheck size={15} />
-                <span>Oraliq nazorat (BSB/ChSB)</span>
+                <span
+                  className={cn(
+                    'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                    colLessonType === 'control'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'bg-gray-100 text-gray-500 dark:bg-surface-3 dark:text-gray-400',
+                  )}
+                >
+                  <FileCheck size={20} />
+                </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-bold leading-tight">Oraliq nazorat</p>
+                    <span className="rounded-sm bg-purple-500/20 px-1 py-0.2 text-[9px] font-black text-purple-700 dark:text-purple-300 uppercase">
+                      BSB / ChSB
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-tight">
+                    Choraklik yoki oraliq bilimni baholash testi va nazorati
+                  </p>
+                </div>
               </button>
             </div>
           </Field>
 
           {/* Topic Combobox with live search (Requirement 2) */}
-          <Field label="O‘tiladigan mavzu">
+          <Field label="O‘tiladigan dars mavzusini tanlang *">
             <TopicCombobox
               lessons={activeQuarterLessons}
               value={colLesson}
               onChange={setColLesson}
-              placeholder="Mavzuni qidiring yoki tanlang..."
+              placeholder="Mavzuni qidiring yoki tanlang (masalan: 3-dars, algoritm, nazorat)..."
             />
           </Field>
 
-          <p className="text-xs text-gray-400">
-            {activeQuarter}-chorak bo‘yicha yangi dars ustuni ochiladi va o‘quvchilar avtomatik darsda qatnashgan deb belgilanadi.
-          </p>
+          {/* Informative notification box */}
+          <div className="flex items-start gap-3 rounded-2xl border border-primary-500/20 bg-primary-50/60 p-4 dark:border-primary-500/15 dark:bg-primary-950/30">
+            <CalendarPlus size={20} className="text-primary-600 dark:text-primary-400 shrink-0 mt-0.5" />
+            <p className="text-xs text-primary-900 dark:text-primary-200 leading-relaxed">
+              Yangi dars ochilganda {activeClass ? `${activeClass.grade}-«${activeClass.letter}»` : 'ushbu'} sinfdagi barcha o‘quvchilar avtomatik tarzda <strong>darsda qatnashgan («Keldi»)</strong> deb belgilanadi va ularga <strong>+2 ball</strong> davomat balli qo‘shiladi. Keyin katakchani bosib baho yoki kamchilik kiritishingiz mumkin.
+            </p>
+          </div>
 
-          {saveColError && <p className="text-sm text-red-500">{saveColError}</p>}
+          {saveColError && (
+            <div className="rounded-xl border border-red-500/30 bg-red-50/80 p-3 text-xs font-semibold text-red-700 dark:border-red-500/20 dark:bg-red-950/40 dark:text-red-300">
+              {saveColError}
+            </div>
+          )}
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-edge">
             <Button variant="ghost" type="button" onClick={() => setColModal(false)}>
               Bekor qilish
             </Button>
-            <Button type="submit" disabled={savingCol || !colLesson}>
-              {savingCol ? 'Ochilmoqda...' : 'Darsni boshlash'}
+            <Button type="submit" disabled={savingCol || !colLesson} className="shadow-sm">
+              <CalendarPlus size={16} className="mr-1.5" />
+              {savingCol ? 'Dars ustuni ochilmoqda...' : 'Darsni boshlash va ustun ochish'}
             </Button>
           </div>
         </form>

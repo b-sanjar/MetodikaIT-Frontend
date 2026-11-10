@@ -305,7 +305,13 @@ export default function TeachersPage() {
       )}
 
       {/* Add / edit */}
-      <Modal open={form !== null} title={form?.id ? 'O‘qituvchini tahrirlash' : 'Yangi o‘qituvchi'} onClose={() => setForm(null)}>
+      <Modal
+        open={form !== null}
+        title={form?.id ? 'O‘qituvchi profilini tahrirlash' : 'Yangi o‘qituvchi qo‘shish'}
+        subtitle="O‘qituvchining F.I.SH, fanlari, biriktirilgan sinflari va kirish ma’lumotlari"
+        onClose={() => setForm(null)}
+        size="xl"
+      >
         {form && (
           <form onSubmit={submit} className="flex flex-col gap-4">
             <Field label="Familiya va ism *">

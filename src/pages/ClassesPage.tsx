@@ -174,7 +174,13 @@ export default function ClassesPage() {
       )}
 
       {/* Add / edit */}
-      <Modal open={form !== null} title={form?.id ? 'Sinfni tahrirlash' : 'Yangi sinf'} onClose={() => setForm(null)}>
+      <Modal
+        open={form !== null}
+        title={form?.id ? 'Sinf ma’lumotlarini tahrirlash' : 'Yangi sinf ochish'}
+        subtitle="Sinf raqami, harfi va sinf rahbarini biriktiring"
+        onClose={() => setForm(null)}
+        size="lg"
+      >
         {form && (
           <form onSubmit={submit} className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">

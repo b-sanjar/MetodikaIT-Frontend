@@ -462,7 +462,13 @@ export default function LessonPage() {
         </div>
       </div>
 
-      <Modal open={edit !== null} title="Dars ishlanmasini tahrirlash" onClose={() => setEdit(null)} wide>
+      <Modal
+        open={edit !== null}
+        title="Dars ishlanmasini tahrirlash"
+        subtitle="Metodik reja, nazariya, amaliyot va dars parametrlari"
+        onClose={() => setEdit(null)}
+        size="2xl"
+      >
         {edit && (
           <form onSubmit={saveEdit} className="flex flex-col gap-4">
             <Field label="Dars mavzusi">
