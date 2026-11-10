@@ -15,14 +15,22 @@ const MONTHS_UZ = [
 
 /** "2026-05-12" -> "12-may" */
 export function formatDateShort(iso: string): string {
-  const [, m, d] = iso.split('-').map(Number)
-  return `${d}-${MONTHS_UZ[m - 1]}`
+  if (!iso || typeof iso !== 'string') return '—'
+  const parts = iso.split('-').map(Number)
+  if (parts.length < 3 || isNaN(parts[1]) || isNaN(parts[2])) return iso
+  const [, m, d] = parts
+  const monthName = MONTHS_UZ[m - 1] || ''
+  return monthName ? `${d}-${monthName}` : iso
 }
 
 /** "2026-05-12" -> "12-may, 2026" */
 export function formatDateLong(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number)
-  return `${d}-${MONTHS_UZ[m - 1]}, ${y}`
+  if (!iso || typeof iso !== 'string') return '—'
+  const parts = iso.split('-').map(Number)
+  if (parts.length < 3 || isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2])) return iso
+  const [y, m, d] = parts
+  const monthName = MONTHS_UZ[m - 1] || ''
+  return monthName ? `${d}-${monthName}, ${y}` : iso
 }
 
 export function todayISO(): string {
@@ -30,10 +38,14 @@ export function todayISO(): string {
 }
 
 export function initials(name: string): string {
-  return name
-    .split(' ')
-    .slice(0, 2)
-    .map((p) => p[0] ?? '')
-    .join('')
-    .toUpperCase()
+  if (!name || typeof name !== 'string') return '?'
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((p) => p[0] ?? '')
+      .join('')
+      .toUpperCase() || '?'
+  )
 }

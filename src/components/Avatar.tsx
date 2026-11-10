@@ -24,13 +24,15 @@ const sizes = {
   xl: 'h-24 w-24 text-2xl',
 }
 
-export default function Avatar({ name, photo, size = 'md', className }: Props) {
-  const hue = PALETTE[(name.charCodeAt(0) + name.length) % PALETTE.length]
+export default function Avatar({ name = '?', photo, size = 'md', className }: Props) {
+  const safeName = (typeof name === 'string' ? name : '?').trim() || '?'
+  const charCode = safeName.charCodeAt(0) || 65
+  const hue = PALETTE[(charCode + safeName.length) % PALETTE.length] || PALETTE[0]
   if (photo) {
     return (
       <img
         src={photo}
-        alt={name}
+        alt={safeName}
         className={cn(
           'shrink-0 rounded-full object-cover ring-2 ring-primary-500/20',
           sizes[size].split(' text-')[0],
@@ -49,7 +51,7 @@ export default function Avatar({ name, photo, size = 'md', className }: Props) {
         className,
       )}
     >
-      {initials(name)}
+      {initials(safeName)}
     </span>
   )
 }

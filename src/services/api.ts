@@ -411,8 +411,8 @@ export function addJournalColumn(
   lessonId: string,
   quarter?: number,
   lessonType?: string,
-): Promise<JournalColumn> {
-  return request<JournalColumn>('/api/journal/columns', {
+): Promise<JournalColumn & { entries?: JournalEntry[] }> {
+  return request<JournalColumn & { entries?: JournalEntry[] }>('/api/journal/columns', {
     method: 'POST',
     body: JSON.stringify({ classId, date, lessonId, quarter, lessonType }),
   })

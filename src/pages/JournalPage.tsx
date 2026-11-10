@@ -150,7 +150,9 @@ export default function JournalPage() {
     setClassId(newClassId)
     try {
       localStorage.setItem('mit:journal_active_class', newClassId)
-    } catch {}
+    } catch {
+      /* ignore storage access error */
+    }
   }
 
   // Load Journal data for activeClass
@@ -177,7 +179,7 @@ export default function JournalPage() {
       }
     }
     return map
-  }, [data?.lessons])
+  }, [data])
 
   const lessonTitle = (lessonId: string) => lessonsById.get(lessonId)?.title ?? 'Mavzu'
 
@@ -188,7 +190,7 @@ export default function JournalPage() {
       const q = inferQuarter(col, lessonsById.get(col.lessonId))
       return q === activeQuarter
     })
-  }, [data?.columns, lessonsById, activeQuarter])
+  }, [data, lessonsById, activeQuarter])
 
   // Entry lookup map for quick cell rendering
   const entryMap = useMemo(() => {
@@ -199,7 +201,7 @@ export default function JournalPage() {
       }
     }
     return map
-  }, [data?.journal])
+  }, [data])
 
   // Student stats calculated strictly for the visible quarter!
   const studentQuarterStats = useMemo(() => {
@@ -225,17 +227,12 @@ export default function JournalPage() {
       })
     }
     return map
-  }, [data?.students, quarterColumns, entryMap])
+  }, [data, quarterColumns, entryMap])
 
-  if (classesLoading) return <Spinner />
-  if (classesError) return <ErrorState message={classesError} onRetry={reloadClasses} />
-  if (!availableClasses.length)
-    return (
-      <EmptyState
-        title="Biriktirilgan sinflar topilmadi"
-        hint="Sizga dars o‘tish yoki rahbarlik qilish uchun hali sinflar biriktirilmagan. Administratorga murojaat qiling."
-      />
-    )
+  // Active quarter lessons (declared unconditionally with all hooks)
+  const activeQuarterLessons = useMemo(() => {
+    return (data?.lessons || []).filter((l) => l.quarter === activeQuarter)
+  }, [data, activeQuarter])
 
   // Permissions
   const canGrade =
@@ -332,13 +329,13 @@ export default function JournalPage() {
     setSavingCol(true)
     setSaveColError(null)
     try {
-      const res = (await api.addJournalColumn(
+      const res = await api.addJournalColumn(
         activeClass.id,
         colDate,
         colLesson,
         activeQuarter,
         colLessonType,
-      )) as any
+      )
 
       const column: JournalColumn = {
         id: res.id,
@@ -408,17 +405,13 @@ export default function JournalPage() {
     }
   }
 
-  const activeQuarterLessons = useMemo(() => {
-    return (data?.lessons || []).filter((l) => l.quarter === activeQuarter)
-  }, [data?.lessons, activeQuarter])
-
   return (
     <div className="animate-rise space-y-5">
       <PageHeader
         title="Elektron jurnal"
         subtitle="Har bir sana o‘tilgan mavzuga bog‘lanadi — baho, davomat va kamchiliklar nazorati"
         actions={
-          canGrade && (
+          canGrade && availableClasses.length > 0 && (
             <Button onClick={openColModal} className="shadow-xs">
               <CalendarPlus size={16} /> Dars o‘tish
             </Button>
@@ -426,8 +419,21 @@ export default function JournalPage() {
         }
       />
 
-      {/* Class Selector Bar (Requirement 2 & 3: Fast, intuitive, modern pill selector) */}
-      <div className="rounded-2xl border border-gray-200/80 bg-white p-3 shadow-xs dark:border-edge dark:bg-surface">
+      {classesLoading ? (
+        <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm dark:border-edge dark:bg-[#161a23]">
+          <Spinner label="Sinflar ma’lumotlari yuklanmoqda..." />
+        </div>
+      ) : classesError ? (
+        <ErrorState message={classesError} onRetry={reloadClasses} />
+      ) : !availableClasses.length ? (
+        <EmptyState
+          title="Biriktirilgan sinflar topilmadi"
+          hint="Sizga dars o‘tish yoki rahbarlik qilish uchun hali sinflar biriktirilmagan. Administratorga murojaat qiling."
+        />
+      ) : (
+        <>
+          {/* Class Selector Bar (Requirement 2 & 3: Fast, intuitive, modern pill selector) */}
+          <div className="rounded-2xl border border-gray-200/80 bg-white p-3 shadow-xs dark:border-edge dark:bg-surface">
         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">
@@ -840,6 +846,8 @@ export default function JournalPage() {
             {canGrade && <span className="ml-auto hidden sm:inline text-gray-400">Katakchani bosib tezkor baho yoki davomat belgilang</span>}
           </div>
         </div>
+      )}
+        </>
       )}
 
       {/* Grade / attendance / issues cell editor modal */}

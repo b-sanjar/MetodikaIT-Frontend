@@ -6,6 +6,7 @@ import { QuarterProvider } from './context/QuarterContext'
 import { subscribeServerStatus } from './services/api'
 import AuthLayout from './layouts/AuthLayout'
 import MainLayout from './layouts/MainLayout'
+import ErrorBoundary from './components/ErrorBoundary'
 import { Spinner } from './components/States'
 import { Sparkles } from 'lucide-react'
 
@@ -110,8 +111,9 @@ export default function App() {
         <QuarterProvider>
           <BrowserRouter>
             <ServerColdStartBanner />
-            <Suspense fallback={<SuspenseFallback />}>
-              <Routes>
+            <ErrorBoundary>
+              <Suspense fallback={<SuspenseFallback />}>
+                <Routes>
               {/* Parent Portal */}
               <Route path="/parents" element={<ParentPortalPage />} />
 
@@ -160,7 +162,8 @@ export default function App() {
               <Route path="/profil" element={<Navigate to="/profile" replace />} />
             </Routes>
           </Suspense>
-        </BrowserRouter>
+        </ErrorBoundary>
+      </BrowserRouter>
         </QuarterProvider>
       </AuthProvider>
     </ThemeProvider>
